@@ -1,0 +1,41 @@
+
+@include critical {
+    html {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        font-size: map-get($grid-settings, font-size);
+        @include desktop-only {
+            font-size: map-get($grid-settings, font-size-desktop);
+        }
+    }
+      
+      // Site-wide base styles.
+    body {
+        @extend %font-body;
+        background-color: var(--color-background);
+        color: var(--color-text);
+    }
+
+    h1, h2, h3, h4, h5, p {
+        @extend %font-heading;
+        margin: 0;
+        padding: 0;
+    }
+
+        h1, .heading1 { @include font(xxx-large); }
+        h2, .heading2 { @include font(xx-large); }
+        h3, .heading3 { @include font(x-large); }
+        h4, .heading4 { @include font(large); }
+        h5, .heading5 { @include font(default); }
+}
+
+@include non-critical {
+    a {
+        color: var(--color-primary);
+
+        &:hover {
+            color: var(--color-secondary);
+        }
+    }
+}
+

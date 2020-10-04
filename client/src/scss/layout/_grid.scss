@@ -1,0 +1,56 @@
+@include critical {
+    .grid {
+        $self: &;
+        width: 100%;
+        .row {
+            @extend %flex,
+                %flex--row,
+                %flex--wrap;
+            width: 100%;
+        }
+
+        .col {
+            &--push-0 {
+                margin-left: 0;
+            }
+
+            @include desktop-only {
+                @include flex-item-width($col-width);
+            }
+
+            @include mobile-only {
+                &--m {
+                    @include flex-item-width($col-width);
+                }
+            }
+
+            @for $c from 1 through $grid-columns {
+                $curr-col-width: $c * $col-width;
+
+                @include desktop-only {
+                    &--push-#{$c} {
+                        margin-left: $curr-col-width;
+                    }
+    
+                    &--#{$c} {
+                        @include flex-item-width($curr-col-width);
+                    }
+                }
+
+                @include mobile-only {    
+                    &--m {
+                        &--#{$c} {
+                            @include flex-item-width($curr-col-width);
+                        }
+    
+                        &--push-#{$c} {
+                            margin-left: $curr-col-width;
+                        }                            
+                    }
+                }
+            }
+
+
+        }
+    }
+}

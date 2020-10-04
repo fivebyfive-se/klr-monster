@@ -1,0 +1,32 @@
+@include critical {
+    body {
+        margin: 0;
+        padding: 0;
+    }
+    article {
+        @extend %flex,
+            %flex--align-center,
+            %flex--justify-flex-start,
+            %flex--column;
+        width: 100vw;
+        max-width: 100%;
+        overflow: hidden;
+
+        @include desktop-only {
+            header,
+            main,
+            footer {
+                width: map-get($max-width, desktop);
+                max-width: 99%;
+            }    
+        }
+        @include mobile-only {
+            header,
+            main,
+            footer {
+                width: map-get($max-width, mobile);
+                overflow-x: hidden;
+            }
+        }    
+    }
+}

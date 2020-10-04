@@ -1,0 +1,22 @@
+@include non-critical {
+    .lazyload {
+        @include desktop-only {
+            transition: filter ease 1s;
+            &--loading {
+                filter: blur($base-size);
+            }
+            &--loaded {
+                filter: blur(0);
+            }    
+        }
+        @include mobile-only {
+            transition: opacity ease 1s;
+            &--loading {
+                opacity: 0;
+            }
+            &--loaded {
+                opacity: 1;
+            }
+        }
+    }
+}

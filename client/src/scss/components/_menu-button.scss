@@ -1,0 +1,75 @@
+@include critical {
+    @include desktop-only {
+        .header__menu-button {
+            display: none;
+        }
+    }
+    @include mobile-only {
+        .header__menu-button {
+            @include rem-dimensions(menu-button-container);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            
+            .button {
+                @include rem-dimensions(menu-button);
+                border: none;
+                background: transparent;
+                color: var(--color-text);
+                position: relative;
+                
+                .line {
+                    &, &:before, &:after {
+                        @include rem-dimensions(menu-button-line);
+                        position: absolute;
+                        display: block;
+
+                        background-color: var(--color-text);    
+                    }
+                    &:before, &:after {
+                        content: '';
+                    }
+                    & {
+                        @include rem-dimensions(menu-button-line-middle);
+                    }
+                    &:before {
+                        @include rem-dimensions(menu-button-line-top);
+                    }
+                    &:after {
+                        @include rem-dimensions(menu-button-line-bottom);
+                    }
+                }
+            }
+        }
+    }
+}
+
+@include non-critical {
+    @include mobile-only {
+        .header__menu-button {
+            .button {
+                .line {
+                    &, &:after, &:before {
+                        transition: all .3s ease-in-out;
+                    }
+                }
+                &:focus {
+                    outline: none;
+                }
+                &.active {
+                    .line {
+                        @include rem-dimensions(menu-button-line-middle-active);
+                        &:before {
+                            @include rem-dimensions(menu-button-line-top-active);
+                            transform: rotate(-315deg);
+                        }
+                        &:after {
+                            @include rem-dimensions(menu-button-line-bottom-active);
+                            transform: rotate(315deg);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

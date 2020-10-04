@@ -1,0 +1,24 @@
+@function size($factor, $base: $base-line-height) {
+    @if $factor==0 or $factor==auto {
+        @return $factor;
+    }
+
+    @return grid-size($base * $factor);
+}
+@function size-m($factor, $base: $base-line-height-mobile) {
+    @return size($factor, $base);
+}
+
+@function grid-size($pixel-height, $base: $base-size) {
+    @return ceil($pixel-height / $base) * $base;
+}
+@function grid-size-m($pixel-height) {
+    @return grid-size($pixel-height, $base-size-mobile);
+}
+
+@function color($name, $opacity: 1.0) {
+    @if (map-has-key($colors, $name)) {
+        @return rgba(map-get($colors, $name), $opacity);
+    }
+    @return transparent;
+}
