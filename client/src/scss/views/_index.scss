@@ -1,0 +1,36 @@
+@include non-critical {
+    .color-picker {
+        @extend %flex,
+            %flex--column,
+            %flex--justify-center,
+            %flex--align-center;
+
+        .sliders {
+            @extend %flex;
+
+            .slider {
+                @extend %flex,
+                    %flex--column;
+
+                .color-swatch {
+                    width: 100%;
+                    height: 12rem;
+                }
+                &:nth-child(3) {
+                    .color-swatch {
+                        position: relative;
+                        &:before {
+                            @include position-absolute($top: 0, $left: 50%);
+                            content: '';
+                            width: 1px;
+                            height: 1px;
+                            border: 10px solid transparent;
+                            border-top-color: var(--color-text);
+                            transform: translateX(-50%);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

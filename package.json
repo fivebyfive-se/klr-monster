@@ -1,0 +1,48 @@
+{
+  "name": "klr-monster",
+  "version": "1.0.0",
+  "description": "Color scheme creator",
+  "main": "index.js",
+  "dependencies": {
+    "cookie-parser": "^1.4.5",
+    "express": "^4.17.1",
+    "express-request-language": "^1.1.15",
+    "i18n": "^0.13.2",
+    "ioredis": "^4.17.3",
+    "nodejs": "0.0.0",
+    "pug": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.6",
+    "@babel/plugin-transform-async-to-generator": "^7.10.4",
+    "@babel/plugin-transform-regenerator": "^7.10.4",
+    "@babel/preset-env": "^7.11.5",
+    "concurrently": "^5.3.0",
+    "grunt": "^1.3.0",
+    "grunt-babel": "^8.0.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-watch": "^1.1.0",
+    "grunt-sass": "^3.1.0",
+    "load-grunt-tasks": "^5.1.0",
+    "node-sass": "^4.14.1",
+    "nodemon": "^2.0.4"
+  },
+  "scripts": {
+    "build": "grunt build",
+    "start": "node --optimize_for_size --max_old_space_size=460 --gc_interval=100 index.js",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
+    "client:dev": "grunt dev",
+    "server:dev": "nodemon --optimize_for_size --max_old_space_size=460 --gc_interval=100 index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fivebyfive-se/klr-monster.git"
+  },
+  "author": "Kalle Räisänen <kalle@fivebyfive.se>",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/fivebyfive-se/klr-monster/issues"
+  },
+  "homepage": "https://github.com/fivebyfive-se/klr-monster#readme"
+}

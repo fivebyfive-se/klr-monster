@@ -1,0 +1,51 @@
+@include critical {
+    .button {
+        @extend %button;
+
+        > i {
+            vertical-align: text-top;
+            margin-right: .3em;
+        }
+    }
+}
+
+@include non-critical {
+    .button {
+        transition: all .3s ease-in-out;
+
+        &:hover {
+            transform: translateY(-1px);
+        }
+        &--activate:hover {
+            border-color: var(--color-primary);
+        }
+
+        &--reveal {
+            @extend %flex,
+                %flex--justify-flex-start;
+
+            color: var(--color-primary);
+            background-color: transparent;
+            width: 100%;
+            > i {
+                @include font(xx-large);
+            }
+            > span {
+                @include font(large, 400);
+                display: inline-block;
+                white-space: pre;
+                width: 0;
+                overflow: hidden;
+            }
+            &:hover {
+                color: var(--color-secondary);
+                border-color: var(--color-secondary);
+                background-color: var(--color-background-secondary-overlay);
+
+                > span {
+                    width: 100%;
+                }
+            }    
+        }
+    }
+}

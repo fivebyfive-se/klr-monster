@@ -1,0 +1,74 @@
+@include critical {
+    .header__logo {
+
+        &,
+        &--link {
+            @include rem-dimensions(logo-container);
+        }
+
+        &--link {
+            @extend %flex,
+            %flex--justify-flex-start,
+            %flex--align-flex-end;
+
+            @include mobile-only {
+                align-items: flex-start;
+            }
+        }
+
+        &--logo {
+            @include rem-dimensions(logo);
+        }
+
+        &--wordmark {
+            @include rem-dimensions(wordmark);
+        }
+        .svg--container {
+            fill: var(--color-teal);
+        }
+    }
+}
+
+@include non-critical {
+    .svg {
+        &--container {
+            animation: 120s ease 0s infinite alternate logo--cyclecolor;   
+        }
+        &--logo__signal {
+            animation: 14s ease 8s infinite alternate logo--logo--bounce;
+        }
+    }
+
+    .page--start {
+        .svg {
+            &--logo {
+                &__circle {
+                    transform-origin: 50% 50%;
+                    animation: 1.5s ease 0s 1 forwards logo--logo--pulsein;
+                }
+
+                &__signal {
+                    transform-origin: 50% 50%;
+                    animation:
+                        3.5s ease 0s 1 forwards logo--logo--wave,
+                        23s ease 4s infinite alternate logo--logo--bounce;
+                }
+            }
+
+            // &--wordmark {
+            //     &__letter {
+            //         transform-origin: 50% 50%;
+            //         animation: 750ms ease 0s 1 forwards logo--wordmark--bouncein;
+            //         opacity: 0;
+            //         $delay-step: 100ms;
+
+            //         @for $n from 0 through 8 {
+            //             &--#{$n} {
+            //                 animation-delay: $delay-step * $n;
+            //             }
+            //         }
+            //     }
+            // }
+        }
+    }
+}

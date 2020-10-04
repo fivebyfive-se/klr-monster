@@ -1,0 +1,14 @@
+-
+    const remixiconClass = (name) => {
+        if (!name) {
+            return 'ri-ghost-smile-line';
+        }
+        return ([
+            (name.indexOf('ri') === 0 ? '' : 'ri'),
+            name,
+            (name.indexOf('full') < 0 && name.indexOf('line')  < 0 ? 'line' : '')
+        ]).join('-');
+    };
+
+mixin remixicon(name)
+    i(class=`${remixiconClass(name)}`)

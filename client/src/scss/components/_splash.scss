@@ -1,0 +1,11 @@
+@include critical {
+    .splash {
+        @extend %flex,
+            %flex--column,
+            %flex--justify-flex-start;
+        height: 20rem;
+        padding: 1rem;
+        color: var(--color-text);
+        text-decoration: none;
+    }
+}

@@ -1,0 +1,14 @@
+-
+    const colClass = (width=6, push=0, mobileWidth=0, mobilePush=0) => {
+        const m_width = mobileWidth || Math.min(width * 2, 12 - mobilePush),
+        m_push = mobilePush || (push > 1 ? push / 2 : 0),
+        m_pushClass = m_push > 0 ? `col--m--push-${m_push}` : '',
+        pushClass = push > 0 ? `col--push-${push}` : '';
+        return `col col--${width} ${pushClass} col--m--${m_width} ${m_pushClass}`;
+    }
+
+mixin col(width=6, push=0, mobileWidth=0, mobilePush=0, ...classes)
+    - className = [colClass(width, push, mobileWidth, mobilePush), ...classes].join(' ');
+    .col(class=className)
+        block
+    

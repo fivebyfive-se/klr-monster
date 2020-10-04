@@ -1,0 +1,94 @@
+$grid-settings: (
+    font-size: 9px,
+    font-size-desktop: 11px,
+    grid-height: 1rem,
+    line-height: 2
+);
+$breakpoints: (
+    desktop: (901px, 1440px),
+    mobile: (0, 900px)
+);
+$max-width: (
+    desktop: 1254px,
+    mobile: 100vw
+);
+$font-sizes: (
+    desktop: (
+        default: 2,
+        small: 1.75,
+        x-small: 1.5,
+        xx-small: 1,
+
+        large: 3,
+        x-large: 4,
+        xx-large: 6,
+        xxx-large: 8
+    ),
+    mobile: (
+        default: 2,
+        small: 1.75,
+        x-small: 1.5,
+        xx-small: 1,
+
+        large: 3,
+        x-large: 4,
+        xx-large: 6,
+        xxx-large: 8
+    )
+);
+$line-heights: (
+    desktop: (
+        default: 4,
+        small: 4,
+        x-small: 3,
+        xx-small: 3,
+
+        large: 4,
+        x-large: 5,
+        xx-large: 6,
+        xxx-large: 8
+    ),
+    mobile: (
+        default: 4,
+        small: 4,
+        x-small: 3,
+        xx-small: 3,
+
+        large: 4,
+        x-large: 5,
+        xx-large: 6,
+        xxx-large: 8
+    )
+);
+
+
+$colors: (
+    black: #000,
+    pink: #CC0E57,
+    blackish: #211310,
+    orange: #FF512B,
+    blue: #0E57CC,
+    green: #AEFF2B,
+    whiteish: #FFD1C7,
+    white: #fff,   
+);
+
+$font-body: 'IBM Plex Sans', 'Helvetica Neue', 'Helvetica', sans-serif;
+$font-heading: $font-body;
+
+$border-width: 2px;
+$border-radius: 2px;
+
+$base-size: map-get($grid-settings, font-size-desktop);
+$base-size-mobile: map-get($grid-settings, font-size);
+
+$base-line-height: $base-size * map-get($grid-settings, line-height);
+$base-line-height-mobile: $base-size-mobile * map-get($grid-settings, line-height);
+
+$grid-columns: 12;
+$gutter-width: 2rem;
+$col-width: percentage(1/$grid-columns);
+
+$z-index-content: 500;
+$z-index-menu: 1000;
+$z-index-top: 2000;

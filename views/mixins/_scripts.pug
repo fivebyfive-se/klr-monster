@@ -1,0 +1,17 @@
+-
+    const addedScripts = {
+        alpha: [],
+        beta: [],
+        omega: []
+    };
+
+mixin script(src, level = 'omega')
+    -
+        if (typeof addedScripts[level] !== 'undefined' && !addedScripts[level].includes(src)) {
+            addedScripts[level].push(src);
+        }
+
+mixin renderScripts()
+    for level in Object.keys(addedScripts)
+        for src in addedScripts[level]
+            script(src=src)

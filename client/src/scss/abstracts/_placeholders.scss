@@ -1,0 +1,84 @@
+
+%rounded-border {
+    border-radius: $border-radius;
+}
+
+%flex {
+    display: flex;
+
+    &--inline {
+        display: inline-flex;
+    }
+    &--row {
+        flex-direction: row;
+    }
+    &--column {
+        flex-direction: column;
+    }
+    &--wrap {
+        flex-wrap: wrap;
+    }
+    &--justify-center {
+        justify-content: center;
+    }
+    &--align-center {
+        align-items: center;
+    }
+    &--justify-space-between {
+        justify-content: space-between;
+    }
+    &--align-space-between {
+        align-items: space-between;
+    }
+    &--justify-flex-start {
+        justify-content: flex-start;
+    }
+    &--align-flex-start {
+        align-items: flex-start;
+    }
+    &--justify-flex-end {
+        justify-content: flex-end;
+    }
+    &--align-flex-end {
+        align-items: flex-end;
+    }
+}
+
+
+%button {
+    @extend %rounded-border,
+        %flex,
+        %flex--inline;
+    cursor: pointer;
+    background-color: var(--color-primary);
+    color: var(--color-background);
+
+    &:hover {
+        background-color: var(--color-secondary);
+        color: var(--color-background);
+    }
+    &--secondary {
+        background-color: var(--color-secondary);
+        &:hover {
+            background-color: var(--color-primary);
+        }
+    }
+}
+
+%font-body {
+    font-family: $font-body;
+    font-weight: 400;
+    font-style: normal;
+    %--italic {
+        font-style: italic;
+    }
+}
+%font-heading {
+    font-family: $font-body;
+    font-weight: 700;
+}
+%font-aside {
+    font-family: $font-body;
+    font-weight: 100;
+}
+
