@@ -1,0 +1,19 @@
+{
+  "name": "klr-monster",
+  "version": "1.0.0",
+  "description": "Color scheme creator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fivebyfive-se/klr-monster.git"
+  },
+  "author": "Kalle Räisänen <kalle@fivebyfive.se>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fivebyfive-se/klr-monster/issues"
+  },
+  "homepage": "https://github.com/fivebyfive-se/klr-monster#readme"
+}
