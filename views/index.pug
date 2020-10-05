@@ -1,14 +1,17 @@
 extends _layout.pug
 
 block content
-    .color-picker
-        #picker.wheel
-        .sliders
-            each index in [4, 2, 0, 1, 3]
-                .slider
-                    .color-swatch(id=`color-swatch-${index}`)
-                    div(id=`color-${index}`, data-index=index) 
-                    input(id=`color-hex-${index}`)
+    .color
+        .color__harmonies
+
+        .color__picker
+            #picker.color__picker__wheel
+            .color__picker__sliders
+                each index in [4, 2, 0, 1, 3]
+                    .slider(class=`slider--${index}`, data-color=index)
+                        .slider__swatch(id=`color-swatch-${index}`)
+                        .slider__slider(id=`color-${index}`) 
+                        input.slider__text(id=`color-hex-${index}`)
 
     +script('https://cdn.jsdelivr.net/npm/@jaames/iro@5', 'alpha')
     +script('/js/main.js')

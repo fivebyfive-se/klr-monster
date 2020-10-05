@@ -12,8 +12,12 @@
       // Site-wide base styles.
     body {
         @extend %font-body;
+        font-size: 2rem;
         background-color: var(--color-background);
         color: var(--color-text);
+    }
+    form, input, select, textarea, option, button {
+        @extend %font-body;
     }
 
     h1, h2, h3, h4, h5, p {

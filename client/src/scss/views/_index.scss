@@ -1,36 +1,84 @@
 @include non-critical {
-    .color-picker {
+    .color {
         @extend %flex,
-            %flex--column,
-            %flex--justify-center,
-            %flex--align-center;
+            %flex--align-flex-start,
+            %flex--justify-space-between;
 
-        .sliders {
-            @extend %flex;
+        &__harmonies, &__picker {
+            @extend %flex,
+                %flex--column,
+                %flex--justify-center;
 
-            .slider {
-                @extend %flex,
-                    %flex--column;
-
-                .color-swatch {
-                    width: 100%;
-                    height: 12rem;
+        }
+        &__harmonies {
+            @extend %flex--align-flex-start;
+            a {
+                color: var(--color-text);
+                &.active {
+                    color: var(--color-primary);
                 }
-                &:nth-child(3) {
-                    .color-swatch {
-                        position: relative;
-                        &:before {
-                            @include position-absolute($top: 0, $left: 50%);
-                            content: '';
-                            width: 1px;
-                            height: 1px;
-                            border: 10px solid transparent;
-                            border-top-color: var(--color-text);
-                            transform: translateX(-50%);
+            }
+        }
+        &__picker {
+            @extend %flex--align-center;
+                &__wheel {
+                    .IroHandle {
+                        &--readonly {
+                            display: none;
+                        }
+                    }
+                }
+                &__sliders {
+                    @extend %flex;
+                }
+                .slider {
+                    @extend %flex,
+                        %flex--column;
+                    padding: 1rem;
+                    
+                    &__swatch {
+                        width: 100%;
+                        height: 8rem;
+                        margin-bottom: 2rem;
+                    }
+                    &__text {
+                        @include font(large);
+                        background-color: var(--color-background-secondary);
+                        border: 1px solid var(--color-text-secondary);
+                        color: var(--color-text);
+                        margin-top: 2rem;
+                        width: 100%;
+
+                        &[readonly] {
+                            background-color: var(--color-background-disabled);
+                            color: var(--color-text-disabled);
+                            border-color: var(--color-background-disabled)
+                        }
+                    }
+                    &--readonly {
+                        .slider__slider {
+                            pointer-events: none;
+                            .IroHandle {
+                                opacity: .5;
+                            }
+                        }
+                    }
+                    &:nth-child(3) {
+                        .slider__swatch {
+                            position: relative;
+                            &:before {
+                                @include position-absolute($top: 0, $left: 50%);
+                                content: '';
+                                width: 1px;
+                                height: 1px;
+                                border: 10px solid transparent;
+                                border-top-color: var(--color-text);
+                                transform: translateX(-50%);
+                            }
                         }
                     }
                 }
             }
-        }
     }
+
 }

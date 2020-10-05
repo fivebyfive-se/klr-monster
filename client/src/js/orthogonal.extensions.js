@@ -3,8 +3,14 @@
     //#region $array
     $o.register('$array', () => {
         const ensureArray = (arrOrItem) => !arrOrItem ? [] : Array.isArray(arrOrItem) ? [...arrOrItem] : [arrOrItem];
-
-        return { ensureArray };
+        const repeat = (value, length) => {
+            const result = [];
+            for (let i = 0; i < length; i++) {
+                result.push(value);
+            }
+            return result;
+        };
+        return { ensureArray, repeat };
     });
     //#endregion
 
@@ -145,7 +151,7 @@
     
 
     //#region $dom
-    $o.register('$dom', ($array, $window, $string) => {
+    $o.register('$dom', ($array, $document, $window, $string) => {
         const onEvents = (element, eventNames, ...callbacks) => {
             $array.ensureArray(eventNames).forEach((eventName) => {
                 if (eventName === 'now') {
@@ -177,7 +183,17 @@
         const getValue = (element) => $string.sanitize(element.value);
         const setValue = (element, value) => element.value = $string.sanitize(value);
 
+        const createTag = (tagName, attributes, ...children) => {
+            const tag = $document.createElement(tagName);
+            Object.keys(attributes).forEach((k) => tag.setAttribute(k, attributes[k]));
+            children.forEach((c) => typeof c === 'string' ? $document.createTextNode(c) : tag.appendChild(c));
+
+            return tag;
+        }
+
         return {
+            createTag,
+
             onEvents, onEventsWithoutDefault,
 
             getPosition, getSize,
