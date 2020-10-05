@@ -37,6 +37,7 @@
                 @extend %flex--justify-center,
                     %flex--align-flex-start;
                 width: 100%;
+                padding: 2rem;
             }
         }
         &__canvas-container {
@@ -77,9 +78,12 @@
             @include font(large);
             padding: 1rem 1rem;
             width: 100%;
+
             background-color: var(--color-background-secondary);
-            color: var(--color-text-secondary);
             border: 1px solid var(--color-text-secondary);
+            color: var(--color-text-secondary);
+
+            text-align: center;
 
             &--name {
                 @include font(default);

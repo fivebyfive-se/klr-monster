@@ -31,9 +31,14 @@ orthogonal.onReady(($dom, $colorHarmony, $colorUtil, $colorWheel) => {
 
     const updateColorUI = () => {
         currentColors.forEach((color, index) => {
+            const hsl = $colorUtil.any_to_hsl(color);
             colorInputs[index].value = 
                 previews[index].style.backgroundColor = 
                     $colorUtil.any_to_string(color, currentMode);
+            
+            nameInputs[index].style.backgroundColor =
+                colorInputs[index].style.backgroundColor = `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, .2)`;
+
             moveHandle(handles[index], color);
         });
     };
