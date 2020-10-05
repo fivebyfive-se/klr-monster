@@ -271,8 +271,25 @@
             invlerp = (x, y, a) => clamp((a - x) / (y - x)),
             range = (x1, y1, x2, y2, a) => lerp(x2, y2, invlerp(x1, y1, a));
 
+        const rangeMap = (map, from, to, val, reverse = false) => {
+            const min = map[0][from];
+            if (val < min) {
+                val += map[map.length - 1][from] - min;
+            }
+            for (let i = 0; i < map.length - 1; i++) {
+                const fromA = map[i][from],
+                    fromB = map[i+1][from],
+                    toA = map[i][to],
+                    toB = map[i+1][to];
+                if (val >= fromA && val < fromB) {
+                    return range(fromA, fromB, toA, toB, val);
+                }
+            }
+            return map[0][to];
+        };
+
         return {
-            lerp, clamp, invlerp, range
+            lerp, clamp, invlerp, range, rangeMap
         };
     });
     //#endregion

@@ -4,15 +4,15 @@ $o.register('$colorHarmony', ($array, $colorUtil) => {
     class ColorHarmony {
         constructor(harmony = 'custom') {
             const harmonies = {
-                complementary: [0,180, [0, 0, .9], [180, 0, .9], [0, 0, .7]],
-                splitComplementary: [0,150,320, [150, 0, .5], [320, 0, .5]],
-                splitComplementaryCW: [0,150,300, [150, 0, .5], [300, 0, .5]],
-                splitComplementaryCCW: [0,60,210, [60, 0, .5], [210, 0, .5]],
-                triadic: [0,120,240, [120, 0, .7], [0, 0, .7]],
-                clash: [0,90,270, [90, 0, .7], [270, 0, .7]],
-                tetradic: [0,90,180,270, [0, 0, .5]],
-                fourToneCW: [0,60,180,240, [0, 0, .5]],
-                fourToneCCW: [0,120,180,300, [0, 0, .5]],
+                complementary: [0,180, [0, .7, .7], [180, .7, .7], [0, 2, 2]],
+                splitComplementary: [0,150,320, [150, .5, .5], [320, .5, .5]],
+                splitComplementaryCW: [0,150,300, [150, 2, 2], [300, 2, 2]],
+                splitComplementaryCCW: [0,60,210, [60, .25, .25], [210, .25, .25]],
+                triadic: [0,120,240, [120, .5, .5], [0, .5, .5]],
+                clash: [0,90,270, [105, 1.5, 1.5], [205, 1.5, 1.5]],
+                tetradic: [0,90,180,270, [0, .5, .5]],
+                fourToneCW: [0,60,180,240, [0, .5, .5]],
+                fourToneCCW: [0,120,180,300, [180, .5, .5]],
                 fiveToneA: [0,115,155,205,245],
                 fiveToneB: [0,40,90,130,245],
                 fiveToneC: [0,50,90,205,320],
@@ -43,10 +43,11 @@ $o.register('$colorHarmony', ($array, $colorUtil) => {
             this.harmonize = (color) => {
                 return harmonies[this.harmony].map((mod) => {
                     let [h, s, l] = $array.ensureArray(mod).concat($array.repeat(0, 3));
+                    const newH = h === 0 ? color.h : $colorUtil.rybhue_to_hslhue(modvalue($colorUtil.hslhue_to_rybhue(color.h), h, 360));
                     return {
-                        h: h === 0 ? color.h : $colorUtil.rybhue_to_hslhue(modvalue($colorUtil.hslhue_to_rybhue(color.h), h, 360)),
-                        s: modvalue(color.s, s, 100),
-                        l: modvalue(color.l, l, 100)
+                        h: +(+newH).toFixed(1),
+                        s: +(+modvalue(color.s, s, 100)).toFixed(1),
+                        l: +(+modvalue(color.l, l, 100)).toFixed(1)
                     };
                 });
             };
@@ -127,9 +128,9 @@ $o.register('$colorUtil', ($linear) => {
                 newS *= normL < .5 ? normL : 1 - normL;
 
                 return {
-                    h,
-                    s: ((2 * newS / (normL + newS)) * 100).toFixed(1), 
-                    v: ((normL + newS) * 100).toFixed(1)
+                    h: +h,
+                    s: +((2 * newS / (normL + newS)) * 100).toFixed(1), 
+                    v: +((normL + newS) * 100).toFixed(1)
                 };
             };
 
@@ -149,7 +150,7 @@ $o.register('$colorUtil', ($linear) => {
                     }
                 }
 
-                return {h, s: (newS * 100).toFixed(1), l: (l * 100).toFixed(1)};
+                return {h: +h, s: +(newS * 100).toFixed(1), l: +(l * 100).toFixed(1)};
             };
 
             this.rgb_to_hex = ({r, g, b}) => {
@@ -200,22 +201,7 @@ $o.register('$colorUtil', ($linear) => {
                 {ryb: 420, hsl: 395},
             ];
 
-            const doMap = (map, from, to, val) => {
-                const min = map[0][from];
-                if (val < min) {
-                    val += map[map.length - 1][from] - min;
-                }
-                for (let i = 0; i < map.length - 1; i++) {
-                    const fromA = map[i][from],
-                        fromB = map[i+1][from],
-                        toA = map[i][to],
-                        toB = map[i+1][to];
-                    if (val >= fromA && val < fromB) {
-                        return ($linear.range(fromA, fromB, toA, toB, val) % 361).toFixed(0);
-                    }
-                }
-                return 0;
-            }
+            const doMap = (map, from, to, val) => +($linear.rangeMap(map, from, to, val) % 361).toFixed(1);
 
             this.rybhue_to_hslhue = (hue) => doMap(ryb_to_hsl_map, 'ryb', 'hsl', hue);
             this.hslhue_to_rybhue = (hue) => doMap(ryb_to_hsl_map, 'hsl', 'ryb', hue);
@@ -258,10 +244,10 @@ $o.register('$colorUtil', ($linear) => {
                         let [m, type, c1, c2, c3] = matches;
                         let res = {};
                         if (c2 <= 1 && c3 <= 1) {
-                            c2 = (c2 * 100).toFixed(1);
-                            c3 = (c3 * 100).toFixed(1);
+                            c2 = +(c2 * 100).toFixed(1);
+                            c3 = +(c3 * 100).toFixed(1);
                             if (c1 <= 1) {
-                                c1 = (c1 * 100).toFixed(1);
+                                c1 = +(c1 * 100).toFixed(1);
                             }
                         }
                         if (type.startsWith('rgb')) {
@@ -291,61 +277,57 @@ $o.register('$colorUtil', ($linear) => {
 //#endregion
 
 //#region $colorWheel
-$o.register('$colorWheel', ($colorUtil) => {
+$o.register('$colorWheel', ($colorUtil, $linear, $window) => {
     class ColorWheel {
         constructor(canvas) {
+            canvas.height = canvas.width = $window.innerHeight / 2;
             const context = canvas.getContext('2d');
             const middle = { x: canvas.width/2, y: canvas.height/2};
             const radius = Math.min(middle.x, middle.y);
-            const canvasData = {
-                pixels: null
+
+            const angle = (x1, y1, x2, y2) => {
+                const a = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+                return (a + 360) % 360;
             };
+            const distance = (x1, y1, x2, y2) => {
+                return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+            };
+            const map_psl = [
+                { p:  0, s: 0, l: 100},
+                { p: .1, s: 10, l: 70},
+                { p: .5, s: 50, l: 40},
+                { p:  1, s: 100, l: 0}
+            ];
+            const map_lp = [
+                { p:  1, l: 0},
+                { p: .5, l: 40},
+                { p: .1, l: 70},
+                { p:  0, l: 100},
+            ];
 
-            this.get_pixel = (x, y) => {
-                const i = (y * canvas.width + x) * 4;
-
-                const r = canvasData.pixels[i];
-                const g = canvasData.pixels[i + 1];
-                const b = canvasData.pixels[i + 2];
-                const a = canvasData.pixels[i + 3] / 255;
-                const iA = 1 - a;
-
-                const wR = (r * a + 255 * iA) | 0;
-                const wG = (g * a + 255 * iA) | 0;
-                const wB = (b * a + 255 * iA) | 0;
-
-                return { r, g, b, a, wR, wG, wB };
-            }
             this.color_at = (mouseEvent) => {
                 const x = mouseEvent.offsetX,
                     y = mouseEvent.offsetY;
+                const a = angle(middle.x, middle.y, x, y);
+                const d = distance(middle.x, middle.y, x, y) /  radius;
+                const h = $colorUtil.rybhue_to_hslhue(a);
+                const s = $linear.rangeMap(map_psl, 'p', 's', d);
+                const l = $linear.rangeMap(map_psl, 'p', 'l', d);
 
-                const pixel = this.get_pixel(x, y);
-
-                return $colorUtil.rgb_to_hsl({ r: pixel.wR, g: pixel.wG, b: pixel.wB });
+                return { h, s, l };
             };
 
-            const distance = (a, b) => {
-                return Math.pow(a.r - b.r, 2) + Math.pow(a.b - b.b, 2) + Math.pow(a.g - b.g, 2);
-            };
-                
-            this.color_to_pos = ({r, g, b}) => {
-                const closest = {
-                    dist: -1,
-                    pos: null
+            this.color_to_pos = ({h, s, l}) => {
+                const a = $colorUtil.hslhue_to_rybhue(h) * Math.PI / 180;
+                const dS = $linear.rangeMap(map_psl, 's', 'p', s) * radius;
+                const dL = $linear.rangeMap(map_lp, 'l', 'p', l) * radius;
+                const d = (2* dS + dL) / 3;
+                return {
+                    x: d * Math.cos(a) + middle.x,
+                    y: d * Math.sin(a) + middle.y
                 };
-                for (let x = 0; x < canvas.width; x++) {
-                    for (let y = 0; y < canvas.height; y++) {
-                        const { wR, wG, wB } = this.get_pixel(x, y);
-                        const dist = distance({r, g, b}, {r: wR, g: wG, b: wB});
-                        if (!closest.pos || closest.dist > dist) {
-                            closest.dist = dist;
-                            closest.pos = { x, y };
-                        }
-                    }
-                }
-                return closest.pos;
             };
+
 
             this.draw = () => {
                 for(let angle = 0; angle <= 360; angle++) {
@@ -358,15 +340,16 @@ $o.register('$colorWheel', ($colorUtil) => {
 
                     const hue = $colorUtil.rybhue_to_hslhue(angle);
                     const gradient = context.createRadialGradient(middle.x, middle.y, 0, middle.x, middle.y, radius);
-                    gradient.addColorStop(0,`hsl(${hue}, 0%, 100%)`);
-                    gradient.addColorStop(0.1,`hsl(${hue}, 10%, 80%)`);
-                    gradient.addColorStop(0.5,`hsl(${hue}, 50%, 40%)`);
-                    gradient.addColorStop(0.9,`hsl(${hue}, 90%, 15%)`);
-                    gradient.addColorStop(1,`hsl(${hue}, 100%, 0%)`);
+                    map_psl.forEach((m) => gradient.addColorStop(m.p, `hsl(${hue}, ${m.s}%, ${m.l}%)`));
                     context.fillStyle = gradient;
                     context.fill();
                 }
-                canvasData.pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+                context.moveTo(middle.x, middle.y);
+                context.beginPath();
+                context.arc(middle.x, middle.y, radius, 0, 2 * Math.PI, false);
+                context.lineWidth = 1;
+                context.strokeStyle= 'white';
+                context.stroke();
             };
         }
     }

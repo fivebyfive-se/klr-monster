@@ -1,25 +1,26 @@
 extends _layout.pug
 
 block content
-    .color
-        .color__settings
-            .color__settings__harmonies
-            .color__settings__mode
-                select.settings__mode
+    +div('color-theme')
+        +div('_', 'section', '-settings')
+            div#color-harmonies(class=className('__', 'container', '-harmonies'))
+            +div('__', 'container', '-mode')
+                select#color-mode(class=className('__', 'select'))
                     option(value='hex', selected) #aabbcc
                     option(value='rgb') rgb(R, G, B)
                     option(value='hsl') hsl(H, S%, L%)
                     option(value='hsv') hsv(H, S%, V%)
 
-        .color__picker
-            .color__picker__wheel
-                canvas.wheel__canvas(width='400', height='400')
-            .color__picker__sliders
+        +div('__', 'section', '-color')
+            div(class=className('__', 'container', '-color-wheel'))
+                div#color-wheel-container(class=className('__', 'canvas-container'))
+                    canvas#color-wheel(class=className('__', 'canvas'), width='400', height='400')
+            +div('__', 'container', '-swatches')
                 each index in [4, 2, 0, 1, 3]
-                    .slider
-                        .slider__swatch(id=`color-swatch-${index}`, data-color=index)
-                        .slider__slider(id=`color-${index}`, data-color=index) 
-                        input.slider__text(id=`color-hex-${index}`, data-color=index)
+                    +div('__', 'swatch', `-${index}`)
+                        input(class=className('__', 'text', '-name', `-${index}`), id=`color-name-${index}`, data-color=index)
+                        div(class=className('__', 'preview', `-${index}`), id=`color-preview-${index}`, data-color=index)
+                        input(class=className('__', 'text', '-color', `-${index}`), id=`color-hex-${index}`, data-color=index)
 
     +script('/js/orthogonal.color.js', 'beta')
     +script('/js/main.js')
