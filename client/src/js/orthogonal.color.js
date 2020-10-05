@@ -44,7 +44,7 @@ $o.register('$colorHarmony', ($array, $colorUtil) => {
                 return harmonies[this.harmony].map((mod) => {
                     let [h, s, l] = $array.ensureArray(mod).concat($array.repeat(0, 3));
                     return {
-                        h: $colorUtil.rybhue_to_hslhue(modvalue($colorUtil.hslhue_to_rybhue(color.h), h, 360)),
+                        h: h === 0 ? color.h : $colorUtil.rybhue_to_hslhue(modvalue($colorUtil.hslhue_to_rybhue(color.h), h, 360)),
                         s: modvalue(color.s, s, 100),
                         l: modvalue(color.l, l, 100)
                     };
@@ -83,7 +83,7 @@ $o.register('$colorUtil', ($linear) => {
                   g = "0x" + hex[3] + hex[4];
                   b = "0x" + hex[5] + hex[6];
                 }
-                return { r, g, b };
+                return { r: parseInt(r, 16), g: parseInt(r, 16), b: parseInt(b, 16) };
             };
 
             this.hex_to_hsl = (hex) => this.rgb_to_hsl(this.hex_to_rgb(hex));
@@ -121,6 +121,37 @@ $o.register('$colorUtil', ($linear) => {
 
             this.hsl_to_hex = ({h, s, l}) => this.rgb_to_hex(this.hsl_to_rgb({h, s, l}));
 
+            this.hsl_to_hsv = ({h, s, l}) => {
+                let newS = s / 100,
+                    normL = l / 100;
+                newS *= normL < .5 ? normL : 1 - normL;
+
+                return {
+                    h,
+                    s: ((2 * newS / (normL + newS)) * 100).toFixed(1), 
+                    v: ((normL + newS) * 100).toFixed(1)
+                };
+            };
+
+            this.hsv_to_hsl = ({h, s, v}) => {
+                const normS = s / 100,
+                    normV = v / 100;
+                const l = (2 - normS) * normV / 2;
+                let newS = 0;
+
+                if (l !== 0) {
+                    if (l === 1) {
+                        newS = 0;
+                    } else if (l < 0.5) {
+                        newS = normS * normV / (l * 2)
+                    } else {
+                        newS = normS * normV / (2 - l * 2)
+                    }
+                }
+
+                return {h, s: (newS * 100).toFixed(1), l: (l * 100).toFixed(1)};
+            };
+
             this.rgb_to_hex = ({r, g, b}) => {
                 let hexR = (r < 0x10 ? '0' : '') + r.toString(16),
                     hexG = (g < 0x10 ? '0' : '') + g.toString(16),
@@ -129,35 +160,30 @@ $o.register('$colorUtil', ($linear) => {
             };
 
             this.rgb_to_hsl = ({r, g, b}) => {
-                const rNorm = r / 255,
-                    gNorm = g / 255,
-                    bNorm = b / 255;
-                
-                const cmin = Math.min(rNorm, gNorm, bNorm),
-                    cmax = Math.max(rNorm, gNorm, bNorm),
-                    delta = cmax - cmin;
-                let h = 0,
-                    s = 0,
-                    l = 0;
+                const rNorm = (r / 255).toFixed(1), 
+                    gNorm = (g / 255).toFixed(1),
+                    bNorm = (b / 255).toFixed(1);
 
-                if (delta === 0) {
-                    h = 0;
-                } else if (cmax == rNorm) {
-                    h = ((gNorm - bNorm) / delta) % 6;
-                } else if (cmax == gNorm) {
-                    h = (bNorm - rNorm) / delta + 2;
+                const max = Math.max(rNorm, gNorm, bNorm),
+                    min = Math.min(rNorm, gNorm, bNorm);
+                let h, s, l = (max + min) / 2;
+              
+                if (max === min) {
+                  h = s = 0; // achromatic
                 } else {
-                    h = (rNorm - gNorm) / delta + 4;
+                  const d = max - min;
+                  s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+              
+                  switch (max) {
+                    case rNorm: h = (gNorm - bNorm) / d + (gNorm < bNorm ? 6 : 0); break;
+                    case gNorm: h = (bNorm - rNorm) / d + 2; break;
+                    case bNorm: h = (rNorm - gNorm) / d + 4; break;
+                  }
+              
+                  h /= 6;
                 }
-                h = Math.round(h * 60);
-                
-                if (h < 0) {
-                    h += 360;
-                }
-                l = (cmax + cmin) / 2;
-
-                s = delta == 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
                     
+                h = Math.ceil(s * 360);
                 s = +(s * 100).toFixed(1);
                 l = +(l * 100).toFixed(1);
 
@@ -185,7 +211,7 @@ $o.register('$colorUtil', ($linear) => {
                         toA = map[i][to],
                         toB = map[i+1][to];
                     if (val >= fromA && val < fromB) {
-                        return $linear.range(fromA, fromB, toA, toB, val) % 361;
+                        return ($linear.range(fromA, fromB, toA, toB, val) % 361).toFixed(0);
                     }
                 }
                 return 0;
@@ -193,6 +219,70 @@ $o.register('$colorUtil', ($linear) => {
 
             this.rybhue_to_hslhue = (hue) => doMap(ryb_to_hsl_map, 'ryb', 'hsl', hue);
             this.hslhue_to_rybhue = (hue) => doMap(ryb_to_hsl_map, 'hsl', 'ryb', hue);
+
+            const col_to_string = (col) => {
+                return Object.keys(col)
+                    .filter((k) => !!col[k] || col[k] === 0)
+                    .map((k) => /[svl]/.test(k) ? `${col[k]}%` : col[k])
+                    .join(', ');
+            };
+
+            this.any_to_string = (source, type='hex') => {
+                const hsl = this.any_to_hsl(source);
+                let res = {};
+
+                switch (type) {
+                    case 'hex':
+                    case '#':
+                        return this.hsl_to_hex(hsl);
+                    case 'rgb':
+                        res = this.hsl_to_rgb(hsl);
+                        break;
+                    case 'hsl':
+                        res = hsl;
+                        break
+                    case 'hsv':
+                        res = this.hsl_to_hsv(hsl);
+                        break;
+                }
+                return `${type}(${col_to_string(res)})`;
+            };
+
+            this.any_to_hsl = (source) => {
+                if (typeof source === 'string') {
+                    if (source.startsWith('#')) {
+                        return this.hex_to_hsl(source);
+                    }
+                    const matches = /(rgb|hs[lv])\((\d*\.?\d+)%?\,?\s*(\d*\.?\d+)%?,?\s*(\d*\.?\d+)%?\)/.exec(source);
+                    if (matches) {
+                        let [m, type, c1, c2, c3] = matches;
+                        let res = {};
+                        if (c2 <= 1 && c3 <= 1) {
+                            c2 = (c2 * 100).toFixed(1);
+                            c3 = (c3 * 100).toFixed(1);
+                            if (c1 <= 1) {
+                                c1 = (c1 * 100).toFixed(1);
+                            }
+                        }
+                        if (type.startsWith('rgb')) {
+                            res = this.rgb_to_hsl({r: +c1, g: +c2, b: +c3});
+                        } else if (type.startsWith('hsv')) {
+                            res = this.hsv_to_hsl({h: +c1, s: +c2, v: +c3});
+                        } else {
+                            res = {h: +c1, s: +c2, l: +c3};
+                        }
+                        return res;
+                    }
+                } else if (source.r) {
+                    return this.rgb_to_hsl(source);
+                } else if (source.h) {
+                    if (source.v) {
+                        return this.hsv_to_hsl(source);
+                    }
+                    return source;
+                }
+                return {h: 0, s: 0, l: 0};
+            }
         }
     };
 

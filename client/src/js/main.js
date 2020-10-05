@@ -1,13 +1,15 @@
 orthogonal.onReady(($dom, $colorHarmony, $colorUtil, $colorWheel) => {
     const canvasContainer = document.querySelector('.color__picker__wheel');
     const canvas = document.querySelector('.wheel__canvas');
-    const harmonySelector = document.querySelector('.color__harmonies');
+    const modeSelector = document.querySelector('select.settings__mode');
+    const harmonySelector = document.querySelector('.color__settings__harmonies');
     const handles = [];
 
     const colorWheel = $colorWheel.create(canvas);
     const colorHarmony = $colorHarmony.create('complementary');
 
     let currentColors = colorHarmony.harmonize({h: 180, s: 50, l: 25});
+    let currentMode = 'hex';
 
 
     const moveHandle = (handle, color, x = null, y = null) => {
@@ -26,7 +28,8 @@ orthogonal.onReady(($dom, $colorHarmony, $colorUtil, $colorWheel) => {
     const updateColorUI = () => {
         currentColors.forEach((color, index) => {
             document.getElementById(`color-hex-${index}`).value = 
-            document.getElementById(`color-swatch-${index}`).style.backgroundColor = $colorUtil.hsl_to_hex(color);
+                document.getElementById(`color-swatch-${index}`).style.backgroundColor = 
+                    $colorUtil.any_to_string(color, currentMode);
             moveHandle(handles[index], color);
         });
     };
@@ -74,9 +77,14 @@ orthogonal.onReady(($dom, $colorHarmony, $colorUtil, $colorWheel) => {
                 const input = ev.currentTarget;
                 if (!input.getAttribute('readonly')) {
                     const { color } = input.dataset;
-                    setColor(color, $colorUtil.hex_to_hsl(input.value));
+                    setColor(color, $colorUtil.any_to_hsl(input.value));
                 }
             });
+        });
+
+        modeSelector.addEventListener('change', (ev) => {
+            currentMode = ev.currentTarget.value;
+            updateColorUI();
         });
         updateHarmonyUI('analogous');
     };

@@ -2,7 +2,14 @@ extends _layout.pug
 
 block content
     .color
-        .color__harmonies
+        .color__settings
+            .color__settings__harmonies
+            .color__settings__mode
+                select.settings__mode
+                    option(value='hex', selected) #aabbcc
+                    option(value='rgb') rgb(R, G, B)
+                    option(value='hsl') hsl(H, S%, L%)
+                    option(value='hsv') hsv(H, S%, V%)
 
         .color__picker
             .color__picker__wheel
