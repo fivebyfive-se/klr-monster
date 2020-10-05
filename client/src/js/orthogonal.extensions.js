@@ -189,10 +189,19 @@
             children.forEach((c) => typeof c === 'string' ? $document.createTextNode(c) : tag.appendChild(c));
 
             return tag;
-        }
+        };
+
+        const ensureElement = (selectorOrElement) => {
+            if (typeof selectorOrElement === 'string') {
+                return $document.querySelector(selectorOrElement);
+            }
+            return selectorOrElement;
+        };
 
         return {
             createTag,
+
+            ensureElement,
 
             onEvents, onEventsWithoutDefault,
 
@@ -251,6 +260,19 @@
         return {
             getVar, getVarAsColor,
             classNames
+        };
+    });
+    //#endregion
+
+    //#region $linear
+    $o.register('$linear', () => {
+        const lerp = (x, y, a) => x * (1 - a) + y * a,
+            clamp = (a, min = 0, max = 1) => Math.min(max, Math.max(min, a)),
+            invlerp = (x, y, a) => clamp((a - x) / (y - x)),
+            range = (x1, y1, x2, y2, a) => lerp(x2, y2, invlerp(x1, y1, a));
+
+        return {
+            lerp, clamp, invlerp, range
         };
     });
     //#endregion

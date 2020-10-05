@@ -5,13 +5,14 @@ block content
         .color__harmonies
 
         .color__picker
-            #picker.color__picker__wheel
+            .color__picker__wheel
+                canvas.wheel__canvas(width='400', height='400')
             .color__picker__sliders
                 each index in [4, 2, 0, 1, 3]
-                    .slider(class=`slider--${index}`, data-color=index)
-                        .slider__swatch(id=`color-swatch-${index}`)
-                        .slider__slider(id=`color-${index}`) 
-                        input.slider__text(id=`color-hex-${index}`)
+                    .slider
+                        .slider__swatch(id=`color-swatch-${index}`, data-color=index)
+                        .slider__slider(id=`color-${index}`, data-color=index) 
+                        input.slider__text(id=`color-hex-${index}`, data-color=index)
 
-    +script('https://cdn.jsdelivr.net/npm/@jaames/iro@5', 'alpha')
+    +script('/js/orthogonal.color.js', 'beta')
     +script('/js/main.js')

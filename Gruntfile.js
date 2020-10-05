@@ -26,6 +26,7 @@ module.exports = (grunt) => {
                 files: {
                     'public/js/orthogonal.js': 'client/src/js/orthogonal.js',
                     'public/js/orthogonal.extensions.js': 'client/src/js/orthogonal.extensions.js',
+                    'public/js/orthogonal.color.js': 'client/src/js/orthogonal.color.js',
                     'public/js/main.js': 'client/src/js/main.js',
                 }
             }

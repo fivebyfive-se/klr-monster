@@ -1,7 +1,7 @@
 @include non-critical {
     .color {
         @extend %flex,
-            %flex--align-flex-start,
+            %flex--align-center,
             %flex--justify-space-between;
 
         &__harmonies, &__picker {
@@ -14,6 +14,7 @@
             @extend %flex--align-flex-start;
             a {
                 color: var(--color-text);
+                cursor: pointer;
                 &.active {
                     color: var(--color-primary);
                 }
@@ -22,9 +23,21 @@
         &__picker {
             @extend %flex--align-center;
                 &__wheel {
-                    .IroHandle {
-                        &--readonly {
-                            display: none;
+                    position: relative;
+                    line-height: 0;
+                    .wheel {
+                        &__canvas {
+                            width: 400px;
+                            height: 400px;
+                        }
+                        &__handle {
+                            cursor: pointer;
+                            position: absolute;
+                            transform: translate(-50%, -50%);
+                            width: 40px;
+                            height: 40px;
+                            border: 2px solid var(--color-background);
+                            border-radius: 50%;
                         }
                     }
                 }
@@ -34,6 +47,8 @@
                 .slider {
                     @extend %flex,
                         %flex--column;
+                        flex-basis: 20%;
+                        width: 20%;
                     padding: 1rem;
                     
                     &__swatch {
@@ -50,17 +65,9 @@
                         width: 100%;
 
                         &[readonly] {
-                            background-color: var(--color-background-disabled);
-                            color: var(--color-text-disabled);
+                            background-color: var(--color-background);
+                            color: var(--color-background-disabled);
                             border-color: var(--color-background-disabled)
-                        }
-                    }
-                    &--readonly {
-                        .slider__slider {
-                            pointer-events: none;
-                            .IroHandle {
-                                opacity: .5;
-                            }
                         }
                     }
                     &:nth-child(3) {
@@ -74,6 +81,7 @@
                                 border: 10px solid transparent;
                                 border-top-color: var(--color-text);
                                 transform: translateX(-50%);
+                                mix-blend-mode: difference;
                             }
                         }
                     }
