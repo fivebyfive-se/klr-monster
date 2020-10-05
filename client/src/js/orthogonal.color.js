@@ -41,13 +41,16 @@ $o.register('$colorHarmony', ($array, $colorUtil) => {
             }
 
             this.harmonize = (color) => {
-                return harmonies[this.harmony].map((mod) => {
+                return harmonies[this.harmony].map((mod, i) => {
+                    if (i === 0) {
+                        return color;
+                    }
                     let [h, s, l] = $array.ensureArray(mod).concat($array.repeat(0, 3));
                     const newH = h === 0 ? color.h : $colorUtil.rybhue_to_hslhue(modvalue($colorUtil.hslhue_to_rybhue(color.h), h, 360));
                     return {
-                        h: +(+newH).toFixed(1),
-                        s: +(+modvalue(color.s, s, 100)).toFixed(1),
-                        l: +(+modvalue(color.l, l, 100)).toFixed(1)
+                        h: +newH,
+                        s: +modvalue(color.s, s, 100),
+                        l: +modvalue(color.l, l, 100)
                     };
                 });
             };
@@ -294,14 +297,14 @@ $o.register('$colorWheel', ($colorUtil, $linear, $window) => {
             };
             const map_psl = [
                 { p:  0, s: 0, l: 100},
-                { p: .1, s: 10, l: 70},
-                { p: .5, s: 50, l: 40},
+                { p: .2, s: 20, l: 65},
+                { p: .5, s: 50, l: 50},
                 { p:  1, s: 100, l: 0}
             ];
             const map_lp = [
                 { p:  1, l: 0},
-                { p: .5, l: 40},
-                { p: .1, l: 70},
+                { p: .5, l: 50},
+                { p: .2, l: 65},
                 { p:  0, l: 100},
             ];
 
@@ -347,7 +350,7 @@ $o.register('$colorWheel', ($colorUtil, $linear, $window) => {
                 context.moveTo(middle.x, middle.y);
                 context.beginPath();
                 context.arc(middle.x, middle.y, radius, 0, 2 * Math.PI, false);
-                context.lineWidth = 1;
+                context.lineWidth = 2;
                 context.strokeStyle= 'white';
                 context.stroke();
             };
