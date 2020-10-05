@@ -1,74 +1,98 @@
-orthogonal.onReady(($o) => {
-    class ColorHarmony {
-        constructor(harmony = 'analogous') {
-            const harmonies = {
-                complementary: [0,180],
-                splitComplementary: [0,150,320],
-                splitComplementaryCW: [0,150,300],
-                splitComplementaryCCW: [0,60,210],
-                triadic: [0,120,240],
-                clash: [0,90,270],
-                tetradic: [0,90,180,270],
-                fourToneCW: [0,60,180,240],
-                fourToneCCW: [0,120,180,300],
-                fiveToneA: [0,115,155,205,245],
-                fiveToneB: [0,40,90,130,245],
-                fiveToneC: [0,50,90,205,320],
-                fiveToneD: [0,40,155,270,310],
-                fiveToneE: [0,115,230,270,320],
-                neutral: [0,15,30,45,60],
-                analogous: [0,30,60,90,120]
-            };
-            this.harmony = harmony;
+orthogonal.onReady(($dom, $colorHarmony, $colorUtil, $colorWheel) => {
+    const canvasContainer = document.getElementById('color-wheel-container');
+    const canvas = document.getElementById('color-wheel');
+    const modeSelector = document.getElementById('color-mode');
+    const harmonySelector = document.getElementById('color-harmonies');
+    const colorInputs = Array.from(document.querySelectorAll('input.color-theme__text--color'));
+    const nameInputs = Array.from(document.querySelectorAll('input.color-theme__text--name'));
+    const previews = Array.from(document.querySelectorAll('.color-theme__preview'));
 
-            this.harmonize = (color) => {
-                return harmonies[this.harmony].map((h) => ({...color, h: color.h + h % 361}));
-            };
+    const handles = [];
 
-            this.changeHarmony = (newHarmony) => {
-                if (harmonies.hasOwnProperty(newHarmony)) {
-                    this.harmony = newHarmony;
-                }
-            };
+    const colorWheel = $colorWheel.create(canvas);
+    const colorHarmony = $colorHarmony.create('complementary');
 
-            this.harmonies = () => Object.keys(harmonies);
+    let currentColors = colorHarmony.harmonize({h: 180, s: 50, l: 25});
+    let currentMode = 'hex';
+
+
+    const moveHandle = (handle, color, x = null, y = null) => {
+        let pos = {x, y},
+            hsl = typeof color.h !== 'undefined' ? color : 
+                typeof color.r !== 'undefined' ? $colorUtil.rgb_to_hsl(color) : {h: 0, s: 0, l: 0};;
+
+        if (pos.x === null || pos.y === null) {
+            pos = colorWheel.color_to_pos(hsl);
         }
-    }
-    const randomInt = (max) => Math.ceil(Math.random() * max);
-    const harmony = new ColorHarmony();
-    const colors = harmony.harmonize({h: randomInt(360), s: randomInt(100), l: randomInt(100) });
-    const sliders = [...colors.map((c, i) => {
-        return new iro.ColorPicker(`#color-${i}`, {
-            color: c,
-            width: 200,
-            layout: [
-                { component: iro.ui.Slider, options: { sliderType: 'hue' } },
-                { component: iro.ui.Slider, options: { sliderType: 'saturation' } },
-                { component: iro.ui.Slider, options: { sliderType: 'value' } }, 
-            ]
-        })
-    })];
-    const picker = new iro.ColorPicker('#picker', {
-        colors: [...colors],
-        layout: [
-            { 
-              component: iro.ui.Wheel,
-            }
-        ]
-    });
-    picker.on('input:change', (c) => {
-        sliders[c.index].color.hsl = c.hsl;
-        document.getElementById(`color-hex-${c.index}`).value = c.hexString;
-        document.getElementById(`color-swatch-${c.index}`).style.backgroundColor = c.hexString;
-    });
-    sliders.forEach((s, i) => {
-        document.getElementById(`color-hex-${i}`).value = s.color.hexString;
-        document.getElementById(`color-swatch-${i}`).style.backgroundColor = s.color.hexString;
-        s.on('input:change', (c) => {
-            picker.colors[i].hsl = c.hsl;
-            document.getElementById(`color-hex-${i}`).value = c.hexString;
-            document.getElementById(`color-swatch-${i}`).style.backgroundColor = c.hexString;
-        })
-    });
-    picker.setActiveColor(0);
+        handle.style.top = `${pos.y}px`;
+        handle.style.left = `${pos.x}px`;
+        handle.style.backgroundColor = $colorUtil.hsl_to_hex(hsl);
+    };
+
+    const updateColorUI = () => {
+        currentColors.forEach((color, index) => {
+            colorInputs[index].value = 
+                previews[index].style.backgroundColor = 
+                    $colorUtil.any_to_string(color, currentMode);
+            moveHandle(handles[index], color);
+        });
+    };
+
+    const updateHarmonyUI = (newHarmony=null) => {
+        if (newHarmony && newHarmony !== colorHarmony.harmony) {
+            colorHarmony.changeHarmony(newHarmony);
+        }
+
+        harmonySelector.querySelectorAll('a').forEach((a) => a.classList.remove('active'));
+        harmonySelector.querySelector(`[data-harmony=${colorHarmony.harmony}]`).classList.add('active');
+
+        if (colorHarmony.harmony !== 'custom') {
+            colorInputs.filter((i) => +i.dataset.color !== 0).forEach((i) => i.setAttribute('readonly', true));
+            previews.filter((p) => +p.dataset.color === 0).forEach((p) => p.classList.add('active'));
+            currentColors = colorHarmony.harmonize(currentColors[0]);
+            updateColorUI();
+        } else {
+            colorInputs.forEach((i) => i.removeAttribute('readonly'));
+        }
+
+    };
+
+    const setColor = (index, color) => {
+        currentColors[index] = color;
+        updateHarmonyUI();
+    };
+
+    const init = () => {
+        colorWheel.draw();
+        colorHarmony.harmonies().forEach((harmony) => {
+            const btn = $dom.createTag('a', { 'data-harmony': harmony}, document.createTextNode(harmony));
+            $dom.onEventsWithoutDefault(btn, 'click', (ev) => {
+                updateHarmonyUI(ev.currentTarget.dataset.harmony);
+            });
+            harmonySelector.appendChild(btn);
+        });
+    
+        canvas.addEventListener('click', (ev) => setColor(0, colorWheel.color_at(ev)));
+
+        colorInputs.forEach((inp, i) => {
+            const handle = $dom.createTag('div', { 'class': `color-wheel__handle color-wheel__handle--${i}` });
+            canvasContainer.appendChild(handle);
+            handles.push(handle);
+
+            inp.addEventListener('change', (ev) => {
+                const input = ev.currentTarget;
+                if (!input.getAttribute('readonly')) {
+                    const { color } = input.dataset;
+                    setColor(color, $colorUtil.any_to_hsl(input.value));
+                }
+            });
+        });
+
+        modeSelector.addEventListener('change', (ev) => {
+            currentMode = ev.currentTarget.value;
+            updateColorUI();
+        });
+        updateHarmonyUI();
+    };
+    init();
 });

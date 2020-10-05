@@ -3,8 +3,14 @@
     //#region $array
     $o.register('$array', () => {
         const ensureArray = (arrOrItem) => !arrOrItem ? [] : Array.isArray(arrOrItem) ? [...arrOrItem] : [arrOrItem];
-
-        return { ensureArray };
+        const repeat = (value, length) => {
+            const result = [];
+            for (let i = 0; i < length; i++) {
+                result.push(value);
+            }
+            return result;
+        };
+        return { ensureArray, repeat };
     });
     //#endregion
 
@@ -145,7 +151,7 @@
     
 
     //#region $dom
-    $o.register('$dom', ($array, $window, $string) => {
+    $o.register('$dom', ($array, $document, $window, $string) => {
         const onEvents = (element, eventNames, ...callbacks) => {
             $array.ensureArray(eventNames).forEach((eventName) => {
                 if (eventName === 'now') {
@@ -177,7 +183,26 @@
         const getValue = (element) => $string.sanitize(element.value);
         const setValue = (element, value) => element.value = $string.sanitize(value);
 
+        const createTag = (tagName, attributes, ...children) => {
+            const tag = $document.createElement(tagName);
+            Object.keys(attributes).forEach((k) => tag.setAttribute(k, attributes[k]));
+            children.forEach((c) => typeof c === 'string' ? $document.createTextNode(c) : tag.appendChild(c));
+
+            return tag;
+        };
+
+        const ensureElement = (selectorOrElement) => {
+            if (typeof selectorOrElement === 'string') {
+                return $document.querySelector(selectorOrElement);
+            }
+            return selectorOrElement;
+        };
+
         return {
+            createTag,
+
+            ensureElement,
+
             onEvents, onEventsWithoutDefault,
 
             getPosition, getSize,
@@ -235,6 +260,36 @@
         return {
             getVar, getVarAsColor,
             classNames
+        };
+    });
+    //#endregion
+
+    //#region $linear
+    $o.register('$linear', () => {
+        const lerp = (x, y, a) => x * (1 - a) + y * a,
+            clamp = (a, min = 0, max = 1) => Math.min(max, Math.max(min, a)),
+            invlerp = (x, y, a) => clamp((a - x) / (y - x)),
+            range = (x1, y1, x2, y2, a) => lerp(x2, y2, invlerp(x1, y1, a));
+
+        const rangeMap = (map, from, to, val, reverse = false) => {
+            const min = map[0][from];
+            if (val < min) {
+                val += map[map.length - 1][from] - min;
+            }
+            for (let i = 0; i < map.length - 1; i++) {
+                const fromA = map[i][from],
+                    fromB = map[i+1][from],
+                    toA = map[i][to],
+                    toB = map[i+1][to];
+                if (val >= fromA && val < fromB) {
+                    return range(fromA, fromB, toA, toB, val);
+                }
+            }
+            return map[0][to];
+        };
+
+        return {
+            lerp, clamp, invlerp, range, rangeMap
         };
     });
     //#endregion

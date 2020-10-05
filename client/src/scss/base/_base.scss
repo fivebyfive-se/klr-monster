@@ -1,19 +1,11 @@
 @include critical {
     :root {
-        --color-background: #{color(whiteish)};
-        --color-background-secondary: #{color(white)};
-        --color-text: #{color(blackish)};
-        --color-text-secondary: #{color(black)};
-        --color-primary: #{color(pink)};
-        --color-secondary: #{color(green)};
-        --color-tertiary: #{color(blue)};
-        --color-quaternary: #{color(orange)};
-    }
-    [data-theme="dark"] {
-        --color-background: #{color(blackish)};
-        --color-background-secondary: #{color(black)};
+        --color-background: #{color(black)};
+        --color-background-secondary: #{color(blackish)};
+        --color-background-disabled: #{color(dark-grey)};
         --color-text: #{color(whiteish)};
         --color-text-secondary: #{color(white)};
+        --color-text-disabled: #{color(grey)};
         --color-primary: #{color(pink)};
         --color-secondary: #{color(green)};
         --color-tertiary: #{color(blue)};
