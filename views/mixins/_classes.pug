@@ -1,0 +1,22 @@
+-
+    let lastElement = '';
+    const className = (...parts) => {
+        const variants = parts.filter((p) => p.startsWith('-'));
+        const elementParts = parts.filter((p) => !p.startsWith('-'));
+        if (elementParts.length > 0 && elementParts[0].startsWith('_')) {
+            if (elementParts[0].length > 1) {
+                lastElement = lastElement.split('__').slice(0, -(elementParts[0].length - 1)).join('__');
+            }
+            elementParts[0] = lastElement;
+        }
+        const elementClass = elementParts.join('__');
+        lastElement = elementClass;
+        return [elementClass, ...variants.map((v) => `${elementClass}-${v}`)].join(' ');
+    };
+
+
+mixin div(...parts)
+    div(class=className(...parts))
+        if block
+            block
+
