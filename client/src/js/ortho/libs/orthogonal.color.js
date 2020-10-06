@@ -1,6 +1,25 @@
 (($o) => {
-//#region $colorHarmony
-$o.register('$colorHarmony', ($array, $colorUtil) => {
+/**
+ * @module se/fivebyfive/ortho/color
+ */
+
+/**
+ * @typedef {{h: number, s: number, l: number}} ColorHSL
+ * @typedef {{h: number, s: number, v: number}} ColorHSV
+ */
+
+     //#region $colorHarmony
+$o.register('$colorHarmony', 
+/**
+ * @function
+ * @param {module:se/fivebyfive/ortho/extensions.ArrayExtension} $array
+ * @param {ColorUtil} $colorUtil
+ */
+($array, $colorUtil) => {
+    /**
+     * @classdesc Color-harmony generator
+     * @class 
+     */
     class ColorHarmony {
         constructor(harmony = 'custom') {
             const harmonies = {
@@ -22,8 +41,16 @@ $o.register('$colorHarmony', ($array, $colorUtil) => {
                 analogous: [0,30,60,90,120],
                 custom: [0, 0, 0, 0, 0]
             };
+
+            /** @private */
             this.harmony = harmony;
 
+            /**
+             * 
+             * @param {number} old 
+             * @param {number} change 
+             * @param {number} max 
+             */
             const modvalue = (old, change, max = 100) => {
                 if (!change) {
                     return old;
@@ -40,6 +67,10 @@ $o.register('$colorHarmony', ($array, $colorUtil) => {
                 return newVal % (max + 1);
             }
 
+            /**
+             * Calculate colors for currently chose harmony
+             * @param {ColorHSL} color 
+             */
             this.harmonize = (color) => {
                 return harmonies[this.harmony].map((mod, i) => {
                     if (i === 0) {
