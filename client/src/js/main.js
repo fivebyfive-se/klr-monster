@@ -1,116 +1,118 @@
-orthogonal.onReady(($dom, $colorHarmony, $colorUtil, $colorWheel) => {
-    const canvasContainer = document.getElementById('color-wheel-container');
+orthogonal.onReady(($store, $dom, $colorHarmony, $colorUtil, $colorWheel) => {
     const canvas = document.getElementById('color-wheel');
     const modeSelector = document.getElementById('color-mode');
     const harmonySelector = document.getElementById('color-harmonies');
 
     const colorWheel = $colorWheel.create(canvas);
-    const colorHarmony = $colorHarmony.create('complementary');
-
-    let currentColors = colorHarmony.harmonize({h: 180, s: 50, l: 25});
 
     const colorInputs = [];
     const nameInputs = [];
     const previews = [];
     const handles = [];
 
-    currentColors.forEach((col, i) => {
+    for (let i = 0; i < 5; i++) {
         colorInputs.push(document.getElementById(`color-hex-${i}`));
         nameInputs.push(document.getElementById(`color-name-${i}`));
         previews.push(document.getElementById(`color-preview-${i}`));
         handles.push(document.getElementById(`color-handle-${i}`));
-    })
+    }
 
-    let currentMode = 'hex';
-
-    const moveHandle = (handle, color, x = null, y = null) => {
-        let pos = {x, y},
-            hsl = typeof color.h !== 'undefined' ? color : 
-                typeof color.r !== 'undefined' ? $colorUtil.rgb_to_hsl(color) : {h: 0, s: 0, l: 0};;
-
-        if (pos.x === null || pos.y === null) {
-            pos = colorWheel.color_to_pos(hsl);
-        }
-        handle.style.top = `${pos.y}px`;
-        handle.style.left = `${pos.x}px`;
-        handle.style.backgroundColor = $colorUtil.hsl_to_hex(hsl);
-    };
-
-    const updateColor = (color, index) => {
-        console.log(index, color);
-
-        const hsl = currentColors[index] 
-            = $colorUtil.any_to_hsl(color);
-
-        colorInputs[index].value = 
-            previews[index].style.backgroundColor = 
-                $colorUtil.any_to_string(color, currentMode);
-        
-        nameInputs[index].style.backgroundColor =
-            colorInputs[index].style.backgroundColor = `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, .2)`;
-
-        moveHandle(handles[index], color);
-    };
-
-    const updateColorUI = () => {
-        currentColors.slice(1).forEach((color, i) => {
-            const index = i + 1;
-            updateColor(color, index);
+    const klrStore = $store.create('klr')
+        .state({
+            colorMode: 'hex',
+            baseColor: {h: 180, s: 50, l: 50},
+            colors: [],
+            colorStrings: [],
+            handlePositions: [],
+            harmony: '',
+        })
+        .actions({
+            setColor: (state, {index, color}) => {
+                return {
+                    ...state,
+                    baseColor: index === 0 ? color : state.baseColor,
+                    colors: state.colors.map((c, i) => i === index ? color : c)
+                };
+            },
+            setColors: (state, colors) => ({ ...state, colors }),
+            setHandlePositions: (state, handlePositions) => ({...state, handlePositions}),
+            setHarmony: (state, harmony) => ({...state, harmony}),
+            setColorMode: (state, colorMode) => ({...state, colorMode}),
+            updateColors: (state) => ({
+                ...state,
+                colors: $colorHarmony.harmonize(state.harmony, state.baseColor)
+            }),
+            updateColorStrings: (state) => ({
+                ...state,
+                colorStrings: state.colors.map((c) => $colorUtil.any_to_string(c, state.colorMode))
+            }),
+            updateHandles: (state) => ({
+                ...state,
+                handlePositions: state.colors.map((c) => colorWheel.color_to_pos(c))
+            })
         });
-    };
 
-    const updateHarmonyUI = (newHarmony=null) => {
-        if (newHarmony && newHarmony !== colorHarmony.harmony) {
-            colorHarmony.changeHarmony(newHarmony);
-        }
+    klrStore.select('handlePositions').subscribe((handlePositions) => {
+        handlePositions.forEach((pos, i) => {
+            handles[i].style.left = `${pos.x}px`;
+            handles[i].style.top = `${pos.y}px`;
+        });
+    });
+    klrStore.select('colorStrings')
+        .subscribe((colorStrings) => colorStrings.forEach((s, i) => colorInputs[i].value = s));
+    klrStore.select('colorMode')
+        .subscribe(() => klrStore.dispatch('updateColorStrings'));
 
-        harmonySelector.querySelectorAll('a').forEach((a) => a.classList.remove('active'));
-        harmonySelector.querySelector(`[data-harmony=${colorHarmony.harmony}]`).classList.add('active');
+    klrStore.select('colors').subscribe((colors) => {
+        colors.forEach((c, i) => handles[i].style.backgroundColor = previews[i].style.backgroundColor = $colorUtil.hsl_to_hex(c));
 
-        if (colorHarmony.harmony !== 'custom') {
-            colorInputs.filter((i) => +i.dataset.color !== 0).forEach((i) => i.setAttribute('readonly', true));
-            previews.filter((p) => +p.dataset.color === 0).forEach((p) => p.classList.add('active'));
-            currentColors = [currentColors[0], ...colorHarmony.harmonize(currentColors[0]).slice(1)];
-            updateColorUI();
+        klrStore.dispatch('updateColorStrings');
+        klrStore.dispatch('updateHandles');
+    });
+
+
+    klrStore.select('harmony').subscribe((harmony) => {
+        harmonySelector.querySelectorAll('[data-harmony]')
+            .forEach((btn) => btn.classList.toggle('active', btn.dataset.harmony === harmony));
+
+        const readonlyFields = colorInputs.slice(1);
+        if (harmony !== 'custom') {
+            readonlyFields.forEach((inp) => inp.setAttribute('readonly', ''));
+            klrStore.dispatch('updateColors');
         } else {
-            colorInputs.forEach((i) => i.removeAttribute('readonly'));
+            readonlyFields.forEach((inp) => inp.removeAttribute('readonly'));
         }
+    });
 
-    };
-
-    const setColor = (index, color) => {
-        updateColor(color, index);
-        updateHarmonyUI();
-    };
+    klrStore.select('baseColor').subscribe(() => klrStore.dispatch('updateColors'));
 
     const init = () => {
+        const availableHarmonies = $colorHarmony.harmonyNames(),
+            defaultHarmony = availableHarmonies[0];
+
         colorWheel.draw();
-        colorHarmony.harmonies().forEach((harmony) => {
-            const btn = $dom.createTag('a', { 'data-harmony': harmony}, document.createTextNode(harmony));
-            $dom.onEventsWithoutDefault(btn, 'click', (ev) => {
-                updateHarmonyUI(ev.currentTarget.dataset.harmony);
-            });
+
+        availableHarmonies.forEach((harmony) => {
+            const btn = $dom.createTag('a', { 
+                'data-harmony': harmony, 
+                'class': harmony === defaultHarmony ? 'active': ''
+            }, document.createTextNode(harmony));
+
+            $dom.dispatchOnEvent(btn, 'click', klrStore, 'setHarmony', (ev) => ev.currentTarget.dataset.harmony);
+
             harmonySelector.appendChild(btn);
         });
-    
-        canvas.addEventListener('click', (ev) => setColor(0, colorWheel.color_at(ev)));
-
-        colorInputs.forEach((inp, i) => {
-            inp.addEventListener('change', (ev) => {
-                const input = ev.currentTarget;
-                if (!input.getAttribute('readonly')) {
-                    const { color } = input.dataset;
-                    setColor(color, $colorUtil.any_to_hsl(input.value));
-                }
-            });
+        $dom.dispatchOnEvent(canvas, 'click', klrStore, 'setColor', (ev) => ({index: 0, color: colorWheel.color_at(ev)}));
+        colorInputs.forEach((inp) => {
+            $dom.dispatchOnEvent(inp, 'change', klrStore, 'setColor', (ev) => ({
+                index: ev.currentTarget.dataset.color,
+                color: $colorUtil.any_to_hsl(ev.currentTarget.value)
+            }));
         });
+        $dom.dispatchOnEvent(modeSelector, 'change', klrStore, 'setColorMode', (ev) => ev.currentTarget.value);
 
-        modeSelector.addEventListener('change', (ev) => {
-            currentMode = ev.currentTarget.value;
-            updateColorUI();
-        });
-        updateColor(currentColors[0], 0);
-        updateHarmonyUI();
+        klrStore.dispatch('setHarmony', defaultHarmony);
     };
+
     init();
 });
