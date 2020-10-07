@@ -1,14 +1,17 @@
-orthogonal.onReady(($store, $dom, $colorHarmony, $colorUtil, $colorWheel) => {
+orthogonal.registerAll(extensionsServices);
+orthogonal.registerAll(colorServices);
+
+orthogonal.onReady(($store, $dom, $colorHarmony, $colorHelper, $colorWheel) => {
     const canvas = document.getElementById('color-wheel');
     const modeSelector = document.getElementById('color-mode');
     const harmonySelector = document.getElementById('color-harmonies');
-
     const colorWheel = $colorWheel.create(canvas);
 
     const colorInputs = [];
     const nameInputs = [];
     const previews = [];
     const handles = [];
+
 
     for (let i = 0; i < 5; i++) {
         colorInputs.push(document.getElementById(`color-hex-${i}`));
@@ -17,7 +20,7 @@ orthogonal.onReady(($store, $dom, $colorHarmony, $colorUtil, $colorWheel) => {
         handles.push(document.getElementById(`color-handle-${i}`));
     }
 
-    const klrStore = $store.create('klr')
+    const klrStore = $store
         .state({
             colorMode: 'hex',
             baseColor: {h: 180, s: 50, l: 50},
@@ -44,7 +47,7 @@ orthogonal.onReady(($store, $dom, $colorHarmony, $colorUtil, $colorWheel) => {
             }),
             updateColorStrings: (state) => ({
                 ...state,
-                colorStrings: state.colors.map((c) => $colorUtil.any_to_string(c, state.colorMode))
+                colorStrings: state.colors.map((c) => $colorHelper.any_to_string(c, state.colorMode))
             }),
             updateHandles: (state) => ({
                 ...state,
@@ -64,7 +67,7 @@ orthogonal.onReady(($store, $dom, $colorHarmony, $colorUtil, $colorWheel) => {
         .subscribe(() => klrStore.dispatch('updateColorStrings'));
 
     klrStore.select('colors').subscribe((colors) => {
-        colors.forEach((c, i) => handles[i].style.backgroundColor = previews[i].style.backgroundColor = $colorUtil.hsl_to_hex(c));
+        colors.forEach((c, i) => handles[i].style.backgroundColor = previews[i].style.backgroundColor = $colorHelper.hsl_to_hex(c));
 
         klrStore.dispatch('updateColorStrings');
         klrStore.dispatch('updateHandles');
@@ -106,7 +109,7 @@ orthogonal.onReady(($store, $dom, $colorHarmony, $colorUtil, $colorWheel) => {
         colorInputs.forEach((inp) => {
             $dom.dispatchOnEvent(inp, 'change', klrStore, 'setColor', (ev) => ({
                 index: ev.currentTarget.dataset.color,
-                color: $colorUtil.any_to_hsl(ev.currentTarget.value)
+                color: $colorHelper.any_to_hsl(ev.currentTarget.value)
             }));
         });
         $dom.dispatchOnEvent(modeSelector, 'change', klrStore, 'setColorMode', (ev) => ev.currentTarget.value);
