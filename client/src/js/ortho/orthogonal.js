@@ -41,28 +41,23 @@
 ```
  */
 
+/**
+ *  @module se/fivebyfive/ortho
+ */
 
 ((win, doc) => {
     /**
-     *  @module se/fivebyfive/ortho
-     */
-
-    /**
-     * Globally exported instance of Orthogonal 
-     * @global 
+     * Globally exported instance of Orthogonal.
      * @const {Orthogonal} orthogonal
+     * @global
      */
     const orthogonal = (() => {
-        /**
-         * Let's start out with some caching stuff
-         */
-        //#region Internal:
-        
         /**
          * Helper function for adding a new getter-method to an object.
          * @param {any} obj 
          * @param {string} name 
-         * @param {function} handler 
+         * @param {function} handler
+         * @private
          */
         const addGetter = (obj, name, handler) => Object.defineProperty(obj, name, { get: handler });
 
@@ -72,6 +67,7 @@
          * @param {any} baseObj 
          * @param {string} dirtyProperty 
          * @returns {any} Proxied version of `baseObj`
+         * @private
          */
         const dirtyable = (baseObj = { value: undefined }, dirtyProperty = 'value') => {
             return new Proxy({ ...baseObj, isDirty: false }, {
@@ -89,27 +85,142 @@
 
         /**
          * @param {string} str 
-         * @returns {number}
+         * @returns {number} - hash of `str`.
+         * @private
          */
         const hash = (str) => {
             let h = 0;
             for (let i = 0; i < str.length; i++) {
                 const c = str.charCodeAt(i);
-                h  = ((h << 5) - h) + c;
+                h = ((h << 5) - h) + c;
                 h |= 0; // Convert to 32bit integer
             }
             return h;
         };
+
         /**
          * @param {string} str 
-         * @returns {string}
+         * @returns {string} - hash of `str` as `string`.
+         * @private
          */
         const hashString = (str) => hash(str).toString();
 
         /**
-         * @classdesc Exported as `$cache` fron ortho.
-         * @class OrthoCache
+         * Class representing an action in `OrthoStore`
+         * @private
          */
+        class OrthoStoreAction {
+            constructor(label, transformCallback = null) {
+                addGetter(this, 'label', () => label);
+                addGetter(this, 'transform', () => transformCallback);
+            }
+        }
+
+        /**
+         * Class representing a subscriber in `OrthoStore`
+         * @private
+         */
+        class OrthoStoreSubscriber {
+            constructor(handler, repeat = true) {
+                const opts = {
+                    handler,
+                    repeat: repeat === true ? -1 : +repeat
+                };
+
+                this.trigger = (context = {}, ...args) => {
+                    opts.handler.call(context, ...args);
+                    if (opts.repeat >= 0) {
+                        opts.repeat--;
+                    }
+                };
+                this.unsubscribe = () => opts.repeat = 0;
+
+                addGetter(this, 'shouldRepeat', () => opts.repeat !== 0);
+            }
+        }
+
+        /**
+         * @classdesc Class representing a selector in {@link OrthoStore}.
+         * @class
+         * @private
+         */
+        class OrthoStoreSelector {
+            constructor(valuePath) {
+                const self = this;
+                const opts = {
+                    valuePath,
+                    path: valuePath.join('.'),
+                    handlers: [],
+                    currValue: dirtyable({ value: null }, 'value'),
+                };
+
+                const getValueFromState = (state, path) => {
+                    const [currKey, ...restOfPath] = path;
+                    const currValue = currKey in state ? state[currKey] : null;
+                    return restOfPath.length > 0 && currValue ? getValueFromState(currValue, restOfPath) : currValue;
+                };
+                const addHandler = (subscriber) => {
+                    opts.handlers = [...opts.handlers, subscriber];
+                    return self;
+                };
+
+                this.update = (newState) => {
+                    const newValue = getValueFromState(newState, opts.valuePath);
+                    if (!opts.currValue.isDirty || newValue !== opts.currValue.value) {
+                        opts.currValue.value = newValue;
+                        opts.handlers = opts.handlers.filter((h) => h.shouldRepeat);
+                        opts.handlers.forEach((h) => h.trigger(self, opts.currValue.value, newState));
+                    }
+                };
+
+                this.subscribe = (handler) => addHandler(new OrthoStoreSubscriber(handler, true));
+
+                this.then = (handler) => addHandler(new OrthoStoreSubscriber(handler, 1));
+
+                this.once = (handler) => {
+                    if (opts.currValue.isDirty) {
+                        handler.call(self, opts.currValue.value);
+                        return self;
+                    }
+                    return self.then(handler);
+                };
+
+                addGetter(this, 'path', () => opts.path);
+                addGetter(this, 'current', () => opts.currValue.value);
+            }
+        }
+
+        /**
+         * @classdesc A simple wrapper around injectables
+         * @class
+         */
+        class OrthoFactory {
+            /**
+             * 
+             * @param {function} creatorFunc 
+             */
+            constructor(creatorFunc) {
+                const instances = {};
+
+                /**
+                 * @param {string} name 
+                 * @param  {...any} args 
+                 */
+                this.create = (name, ...args) => {
+                    instances[name] = instances[name] || creatorFunc.call({}, ...args);
+                    return instances[name];
+                };
+            }
+        }
+
+        /**
+         * Public stuf:
+         */
+        /**
+          * @classdesc Cache-handler. Service can be dependency inject as `$cache` from 
+          * {@link Orthogonal}.
+          * @class OrthoCache
+          */
         class OrthoCache {
             constructor() {
                 const self = this;
@@ -121,11 +232,11 @@
                  * @returns {string}
                  */
                 this.createKey = (...objects) => {
-                    return objects.filter((o) => typeof o !== 'undefined' && o !== 'null').map((o) => typeof o === 'string' 
-                        ? hashString(o) 
-                            : Array.isArray(o) ? self.createKey(...o)
-                                : typeof o === 'object' ? self.createKey(...Object.keys(o))
-                                    : hashString(o.toString)
+                    return objects.filter((o) => typeof o !== 'undefined' && o !== 'null').map((o) => typeof o === 'string'
+                        ? hashString(o)
+                        : Array.isArray(o) ? self.createKey(...o)
+                            : typeof o === 'object' ? self.createKey(...Object.keys(o))
+                                : hashString(o.toString)
                     ).join(',');
                 };
 
@@ -148,31 +259,38 @@
 
 
         /**
+         * typedef {{key: string, value: any}} Variable
+         */
+
+        /**
          * @classdesc Primarily used for dependency injection. Contains
          * methods for reflection -- parsing functions to see
-         * which parameters it has and what they're called
-         * Dependency injected as `$expressionParser`
+         * which parameters it has and what they're called.
+         * Can be dependency injected as a service via `Orthogonal` as `$expressionParser`.
          * @class OrthoExpressionParser
          */
         class OrthoExpressionParser {
             constructor(testVariableFunction = null) {
+                /** @private */
                 const self = this;
-                const nameInExpression =  testVariableFunction || ((name, expression) => new RegExp(`\\b${name}\\b`).test(expression));
+                /** @private */
                 const cache = new OrthoCache();
+                /** @private */
+                const nameInExpression = testVariableFunction || ((name, expression) => new RegExp(`\\b${name}\\b`).test(expression));
 
                 /**
                  * Find all variable names which have keys in `context` in the JavaScript
                  * code in `expression`.
                  * @param {string} expression 
-                 * @param {Map<string, any>} context 
-                 * @returns {Map<string, any>[]}
+                 * @param {any} context 
+                 * @returns {Variable[]}
                  */
                 this.parse = (expression, context) => {
                     return cache.get([expression, context], () => {
                         return Object.keys(context)
                             .filter((key) => nameInExpression(key, expression))
                             .reduce(
-                                (prev, key) => ([ ...prev, { key, value: context[key] } ]),
+                                (prev, key) => ([...prev, { key, value: context[key] }]),
                                 []
                             );
                     });
@@ -183,8 +301,8 @@
                  * parameters are named the same as all the variables referenced in the code
                  * which have a value in `context`, and all
                  * @param {string} expression 
-                 * @param {Map<string, any>} context
-                 * @returns {{variables: {key: string, value: any}[], expressFunction: function}} 
+                 * @param {any} context
+                 * @returns {{variables: Variable[], expressFunction: function}} 
                  * @example // returns {variables: [{key: a, value: 3}], expressFunction: (a) => a + 1}; 
                  *  $expressionParser.createFunction('a + 1', { a: 3});  
                  */
@@ -210,7 +328,7 @@
 
                     return (...args) => expressionFunction.call(context, ...variables.map((v) => v.value), ...args);
                 };
-    
+
                 /**
                  * Create and run a dependency-injection wrapped function using the code
                  * in `expression`, injecting the values from `context` whose keys match variable-names
@@ -224,20 +342,23 @@
             }
         }
 
-        //#region Dependency injection
         /**
-         * @classdesc Dependency injector. Itself injected as `$injector`.
+         * @classdesc Dependency injector. Itself injected as `$injector` from {@link Orthogonal}.
          * @class OrthoInjector
          */
         class OrthoInjector {
             constructor(container = null, lazyload = true) {
+                /** @private */
                 const self = this;
+                /** @private */
                 const injectContainer = container || {};
+                /** @private */
                 const expressionParser = new OrthoExpressionParser();
-    
+
                 /**
                  * Get argument names from `func`
-                 * @param {function} func 
+                 * @param {function} func
+                 * @private
                  */
                 const argumentNames = (func) => {
                     return typeof func !== 'function' ? [] : (func + '')
@@ -248,7 +369,7 @@
                         .replace(/=[^,]+/g, '') // strip any ES6 defaults  
                         .split(',').filter(Boolean); // split & filter [""]
                 };
-    
+
                 /**
                  * Get all dependencies which have names matching keys
                  * in `injectedArgs`. If the dependency is a function, and `lazyload` is `true`,
@@ -256,15 +377,14 @@
                  * @param {string[]} injectedArgs 
                  * @returns {object}
                  * @private
-                 * @method
                  */
                 const loadInjections = (injectedArgs) => injectedArgs.map((a) => {
-                    if (lazyload && typeof injectContainer[a] === 'function') { 
-                        injectContainer[a] =  self.callFunction(injectContainer[a]);
+                    if (lazyload && typeof injectContainer[a] === 'function') {
+                        injectContainer[a] = self.callFunction(injectContainer[a]);
                     }
                     return injectContainer[a];
                 });
-    
+
 
                 /**
                  * Register a new dependency under the name `name`.
@@ -275,34 +395,28 @@
                  * @param {string} name 
                  * @param {function|any} dependency 
                  * @returns {OrthoInjector}
-                 * @public
-                 * @method
                  */
                 this.register = (name, dependency) => {
                     injectContainer[name] = dependency;
                     return self;
                 };
-    
+
                 /**
                  * Register all values in `newContext` with names matching their key.
                  * @param {object} newContext 
                  * @returns {OrthoInjector}
-                 * @public
-                 * @method
                  */
                 this.registerAll = (newContext) => {
                     Object.keys(newContext).forEach((k) => self.register(k, newContext[k], injectContainer));
                     return self;
                 };
-    
+
                 /**
                  * Create a dependency-injected version of `func`, explicity injecting the
                  * dependencies listed in `injectArgs` only.
                  * @param {function} func 
                  * @param  {...string} injectArgs 
                  * @returns {function}
-                 * @public
-                 * @method
                  */
                 this.injectExplicit = (func, ...injectArgs) => (...args) => func.call(injectContainer, ...loadInjections(injectArgs), ...args);
 
@@ -311,33 +425,27 @@
                  * the dependencies reference in its argument list.
                  * @param {function} func 
                  * @returns {function}
-                 * @public
-                 * @method
                  */
                 this.injectFunction = (func) => {
                     const args = argumentNames(func);
                     const injectArgs = args.filter((a) => a in injectContainer);
-                        
+
                     return self.injectExplicit(func, ...injectArgs);
                 };
-                
+
                 /**
                  * Create and call a dependency-injected version of `func`, automatically injecting all
                  * the dependencies reference in its argument list.
                  * @param {function} func 
                  * @returns {any}
-                 * @public
-                 * @method
                  */
                 this.callFunction = (func, ...args) => self.injectFunction(func)(...args);
-    
+
                 /**
                  * Create a function which wraps the code in `expression`, injecting all
                  * dependencies referenced in the code.
                  * @param {string} expression 
                  * @returns {function}
-                 * @public
-                 * @method
                  */
                 this.injectExpression = (expression) => () => {
                     const { variables, expressionFunction } = expressionParser.parse(expression, injectContainer);
@@ -349,112 +457,26 @@
                  * dependencies referenced in the code.
                  * @param {string} expression 
                  * @returns {any}
-                 * @public
-                 * @method
                  */
                 this.callExpression = (expression) => self.injectExpression(expression)();
 
                 addGetter(this, 'container', () => injectContainer);
             }
         }
-        //#endregion
-
-        //#region createOrthoStore
-        /**
-         * Class representing an action in `OrthoStore`
-         * @internal
-         */
-        class OrthoStoreAction {
-            constructor(label, transformCallback = null) {
-                addGetter(this, 'label', () => label);
-                addGetter(this, 'transform', () => transformCallback);
-            }
-        }
 
         /**
-         * Class representing a subscriber in `OrthoStore`
-         * @internal
-         */
-        class OrthoStoreSubscriber {
-            constructor(handler, repeat = true) {
-                const opts = {
-                    handler,
-                    repeat: repeat === true ? -1: +repeat
-                };
-
-                this.trigger = (context = {}, ...args) => {
-                    opts.handler.call(context, ...args);
-                    if (opts.repeat >= 0) {
-                        opts.repeat--;
-                    }
-                };
-                this.unsubscribe = () => opts.repeat = 0;
-
-                addGetter(this, 'shouldRepeat', () => opts.repeat !== 0);
-            }
-        }
-
-        /**
-         * Class representing a selector in `OrthoStore`
-         * @internal
-         */
-        class OrthoStoreSelector {
-            constructor(valuePath) {
-                const self = this;
-                const opts = {
-                    valuePath,
-                    path: valuePath.join('.'),
-                    handlers: [],
-                    currValue: dirtyable({value: null}, 'value'),
-                };
-                                    
-                const getValueFromState = (state, path) => {
-                    const [currKey, ...restOfPath] = path;
-                    const currValue = currKey in state ? state[currKey] : null;
-                    return restOfPath.length > 0 && currValue ? getValueFromState(currValue, restOfPath) : currValue;
-                };
-                const addHandler = (subscriber) => {
-                    opts.handlers = [...opts.handlers, subscriber];
-                    return self;
-                };
-
-                this.update = (newState) => {
-                    const newValue = getValueFromState(newState, opts.valuePath);
-                    if (!opts.currValue.isDirty || newValue !== opts.currValue.value) {
-                        opts.currValue.value = newValue;
-                        opts.handlers = opts.handlers.filter((h) => h.shouldRepeat);
-                        opts.handlers.forEach((h) => h.trigger(self, opts.currValue.value));
-                    }
-                };
-
-                this.subscribe = (handler) => addHandler(new OrthoStoreSubscriber(handler, true));
-
-                this.then = (handler) => addHandler(new OrthoStoreSubscriber(handler, 1));
-
-                this.once = (handler) => {
-                    if (opts.currValue.isDirty) {
-                        handler.call(self, opts.currValue.value);
-                        return self;
-                    }
-                    return self.then(handler);
-                };
-
-                addGetter(this, 'path', () => opts.path);
-                addGetter(this, 'current', () => opts.currValue.value);
-            }
-        }
-
-        /**
-         * @classdesc Dependency-injected as `$store`.
+         * @classdesc Simple state-management. Dependency-injected as `$store` from {@link Orthogonal}.
          * @class OrthoStore
          */
         class OrthoStore {
             constructor() {
+                /** @private */
                 const self = this;
+                /** @private */
                 const store = {
                     state: {},
                     actions: [
-                        new OrthoStoreAction('$set', (state, {key, value}) => {
+                        new OrthoStoreAction('$set', (state, { key, value }) => {
                             const newState = { ...state };
                             newState[key] = value;
                             return newState;
@@ -464,18 +486,21 @@
                     selectors: []
                 };
 
-                //#region Action-helpers
+
+                /** @private */
                 const addAction = (label, transform) => store.actions.push(new OrthoStoreAction(label, transform));
+                /** @private */
                 const findActions = (label) => store.actions.filter((action) => label === action.label);
+                /** @private */
                 const applyActions = (startState, label, payload) => findActions(label).reduce(
                     (newState, action) => action.transform(newState, payload, self.dispatch),
                     startState
                 );
-                //#endregion
 
+                /** @private */
                 const updateStore = (...updates) => {
                     store.state = updates
-                        .map(([a, p]) => ({action: a, payload: !p ? null : p.length === 1 ? p[0] : p }))
+                        .map(([a, p]) => ({ action: a, payload: !p ? null : p.length === 1 ? p[0] : p }))
                         .reduce(
                             (updatedState, { action, payload }) => applyActions(updatedState, action, payload),
                             store.state
@@ -483,31 +508,48 @@
                     store.selectors.forEach((sel) => sel.update(store.state));
                 };
 
-                /** @public @method */
+                /**
+                 * You only want to use this once -- combines existing state with `initialState`,
+                 * but makes no effort to dispatch actions or fire events.
+                 * @param {any} intialState
+                 * @returns {this}
+                 */ 
                 this.state = (initialState) => {
                     store.state = { ...store.state, ...initialState };
                     return self;
                 };
 
-                /** @public @method */
+                /**
+                 * Add `actions` to store. Each action represents a change of state.
+                 * @param {object} actions 
+                 * @returns {this}
+                 */
                 this.actions = (actions = {}) => {
                     Object.keys(actions).forEach((label) => addAction(label, actions[label]));
                     return self;
                 };
 
-                /** @public @method */
+                /**
+                 * Dispatch `actions`.
+                 * @param {string|any} actions - list of actions and payloads.
+                 * @returns {this}
+                 */
                 this.dispatch = (...actions) => {
-                    const [ action, ...payload ] = actions;
+                    const [action, ...payload] = actions;
                     if (typeof action === 'string') {
-                        updateStore([ action, payload ]);
+                        updateStore([action, payload]);
                     } else {
                         updateStore(...actions);
                     }
                     return self;
                 };
 
-                 /** @public @method */
-                 this.select = (selectorOrPath) => {
+                /**
+                 * Select a value from store. returns an 
+                 * @param {OrthoStoreSelector|string} selectorOrPath
+                 * @returns {OrthoStoreSelector}
+                 */
+                this.select = (selectorOrPath) => {
                     const pathSelector = typeof selectorOrPath === 'string' ? selectorOrPath.split('.') : [...selectorOrPath];
                     const path = pathSelector.join('.');
                     let selector = store.selectors.find((s) => s.path === path);
@@ -519,10 +561,18 @@
                     return selector;
                 };
 
+                /**
+                 * Proxy for store state -- automatically dispatches `$set` action
+                 * when any value is changed.
+                 * @name stateProxy
+                 * @member
+                 * @type {object}
+                 * @private
+                 */
                 addGetter(this, 'stateProxy', () => new Proxy(store.state, {
                     set: (target, key, value) => {
                         if (['$scope', '$rootScope'].includes(key)) {
-                            self.dispatch('$set', { key, value: { ...value }});
+                            self.dispatch('$set', { key, value: { ...value } });
                         }
                         self.dispatch('$set', { key, value });
                         return true;
@@ -530,27 +580,16 @@
                 }))
             }
         }
-        //#endregion
 
-        //#region Factories
-        class OrthoFactory {
-            constructor(creatorFunc) {
-                const instances = {};
-                this.create = (name, ...args) => {
-                    instances[name] = instances[name] || creatorFunc.call({}, ...args);
-                    return instances[name];
-                };
-            }
-        }
-
+        /** @private */
         const orthoCacheFactory = new OrthoFactory(() => new OrthoCache());
+        /** @private */
         const orthoExpressionParserFactory = new OrthoFactory((testFunction = null) => new OrthoExpressionParser(testFunction));
+        /** @private */
         const orthoInjectorFactory = new OrthoFactory((context = {}) => new OrthoInjector(context));
+        /** @private */
         const orthoStoreFactory = new OrthoFactory(() => new OrthoStore());
-        //#endregio
-        //#endregion
 
-        //#region Class-definition:
         /**
          * @classdesc The main entry point
          * @class Orthogonal
@@ -558,13 +597,15 @@
          */
         class Orthogonal {
             constructor() {
-                /** @const {Orthogonal} injector */
+                /** @private */
                 const self = this;
-                /** @const {OrthoInjector} injector */
+                /** @private */
                 const injector = orthoInjectorFactory.create();
 
-                //#region Injector
-                /** @inheritdoc OrthoInjector#register */
+                /** @inheritdoc */
+                this.registerAll = injector.registerAll;
+                
+                /** @inheritdoc */
                 this.register = injector.register;
 
                 /**
@@ -572,27 +613,25 @@
                  * in a dependency-injecting function.
                  * @param {string|function} expression
                  * @return {function}
-                 * @public @method
+                 * @method
                  * */
-                this.inject = (expression) => typeof expression === 'function' 
-                    ? injector.injectFunction(expression) 
+                this.inject = (expression) => typeof expression === 'function'
+                    ? injector.injectFunction(expression)
                     : injector.injectExpression(expression);
 
-                 /**
-                 * Wrap `expression` (which can be either a string containing JavaScript or a function)
-                 * in a dependency-injecting function, and call it, passing along `args` as arguments after
-                 * the injected dependencies.
-                 * @param {string|function} expression
-                 * @param {any[]} args
-                 * @return {any}
-                 * @public @method
-                 * */   
-                this.call = (expression, ...args) => typeof expression === 'function' 
-                    ? injector.callFunction(expression, ...args) 
+                /**
+                * Wrap `expression` (which can be either a string containing JavaScript or a function)
+                * in a dependency-injecting function, and call it, passing along `args` as arguments after
+                * the injected dependencies.
+                * @param {string|function} expression
+                * @param {any[]} args
+                * @return {any}
+                * @method
+                * */
+                this.call = (expression, ...args) => typeof expression === 'function'
+                    ? injector.callFunction(expression, ...args)
                     : injector.callExpression(expression);
-                //#endregion
 
-                //#region Events
                 /**
                  * Inject dependencies into the function `func`, and call it once
                  * the browser window has loaded (or directly if it already has). 
@@ -607,30 +646,62 @@
                         win.addEventListener('load', callback);
                     }
                 };
-                //#endregion
-                
-                //#region Registration
-                /** @namespace Services */
-                const dependencies = {
-                    /** @type {OrthoCache} */
-                    $cache: () => orthoCacheFactory,
-                    /** @type {OrthoExpressionParser} */
-                    $expressionParser: () => orthoExpressionParserFactory,
-                    /** @type {OrthoInjector} */
-                    $injector: () => orthoInjectorFactory,
-                    /** @type {OrthoStore} */
-                    $store: () => orthoStoreFactory,
-                    /** @type {Window}  */
-                    $window: win,
-                    /** @type {Document} */
-                    $document: doc
-                }
 
-                injector.registerAll(dependencies);
-                //#endregion
+
+                /**
+                 * This module contains all built in injectable services
+                 * from {@link module:se/fivebyfive/ortho~Orthogonal}.
+                 * @module se/fivebyfive/ortho/_/services
+                 */
+                const rootDependencies = {
+                    /** 
+                     * @name $cache
+                     * @static
+                     * @type {module:se/fivebyfive/ortho~OrthoCache}
+                     **/
+                    $cache: () => orthoCacheFactory,
+
+                    /** 
+                     * @name $expressionParser
+                     * @static
+                     * @type {module:se/fivebyfive/ortho~OrthoExpressionParser} 
+                     **/
+                    $expressionParser: () => orthoExpressionParserFactory,
+
+                    /** 
+                     * @name $injector
+                     * @static
+                     * @type {module:se/fivebyfive/ortho~OrthoInjector} 
+                     **/
+                    $injector: () => orthoInjectorFactory,
+
+                    /** 
+                     * @name $store
+                     * @static
+                     * @type {module:se/fivebyfive/ortho~OrthoStore} 
+                     **/
+                    $store: () => orthoStoreFactory,
+
+                    /** 
+                    * @name $window
+                    * @static
+                    * @type {external:Window} 
+                    **/
+                    $window: win,
+
+                    /** 
+                    * @name $document
+                    * @static
+                    * @type {external:Document} 
+                    **/
+                    $document: doc
+                };
+
+
+
+                injector.registerAll(rootDependencies);
             }
         }
-        //#endregion
 
         return new Orthogonal();
     })();

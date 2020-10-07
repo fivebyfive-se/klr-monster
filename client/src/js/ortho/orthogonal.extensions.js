@@ -1,27 +1,19 @@
-
- ((ortho /* :Orthogonal */) => {
-
-    /** @const {module:se/fivebyfive/ortho.Orthogonal} $o */
-    const $o = ortho;
-
-    //#region Helpers
+/**
+ * @module se/fivebyfive/ortho/extensions
+ */
+(($o /* :Orthogonal */) => {
+    const $array = 
     /**
-     * @module se/fivebyfive/ortho/extensions
-     */
-
-    //#region $array
-    /**
-     * @name ArrayExtensions
-     * @classdesc Array utilities 
-     * @class
+     * Array utilities. Injectable as `$array` from {@link module:se/fivebyfive/ortho~Orthogonal}
+     * @function
+     * @constructs module:se/fivebyfive/ortho/extensions~ArrayHelper
+     * @hideconstructor
      **/
-    $o.register('$array',
-    /** @constructs */
     () => {
         /**
          * @param {any|any[]} arrOrItem 
-         * @return `arrOrItem` if it is an array, or `[arrOrItem]` if not.
-         * @memberof ArrayExtensions#
+         * @return {any[]} `arrOrItem` if it is an array, or `[arrOrItem]` if not.
+         * @memberof! module:se/fivebyfive/ortho/extensions~ArrayHelper#
          */
         const ensureArray = (arrOrItem) => !arrOrItem ? [] : Array.isArray(arrOrItem) ? [...arrOrItem] : [arrOrItem];
 
@@ -30,7 +22,7 @@
          * @param {any} value 
          * @param {number} length
          * @returns {any[]} An array containing `value` `length` times. 
-         * @memberof ArrayExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ArrayHelper#
          */
         const repeat = (value, length) => {
             const result = [];
@@ -40,23 +32,22 @@
             return result;
         };
 
-        /** @lends ArrayExtensions.prototype */
+        /** @lends module:se/fivebyfive/ortho/extensions~ArrayHelper.prototype */
         return { 
             ensureArray, 
             repeat 
         };
-    });
-    //#endregion
+    };
 
-    //#region $object
+    
+
+    const $object =
     /**
-     * @name ObjectExtensions
+     * @classdesc Helper for `object`s. Injectable as `$object` from {@link module:se/fivebyfive/ortho~Orthogonal}
      * @class
-     */
-    $o.register('$object',
-    /**
-     * @constructs
-     * @param {ArrayExtensions} $array
+     * @constructs module:se/fivebyfive/ortho/extensions~ObjectHelper
+     * @hideconstructor
+     * @param {module:se/fivebyfive/ortho/extensions~ArrayHelper} $array
      */ 
     ($array) => {
 
@@ -66,7 +57,7 @@
          * @param {object} target 
          * @param  {...object} sources 
          * @returns {object} `target`
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const merge = (target, ...sources) => {
             sources.forEach((source) => Object.keys(source).forEach((k) => target[k] = source[k]));
@@ -79,7 +70,7 @@
          * @param {object} target
          * @param  {...object} sources
          * @returns {object} `target`
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const disjunctMerge = (target, ...sources) => {
             sources.forEach((source) => {
@@ -97,7 +88,7 @@
          * Combine `objects` into a new `object` -- returning the result 
          * @param  {...object} objects 
          * @returns {object}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const immutableMerge = (...objects) => merge({}, ...objects);
 
@@ -106,7 +97,7 @@
          * Get all unique keys from `objects` as an array.
          * @param  {...object} objects 
          * @return {string[]}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const allKeys = (...objects) => {
             return objects.reduce((keys, obj) => {
@@ -122,7 +113,7 @@
          * @param {object} a 
          * @param {object} b 
          * @returns {string[]}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const diffKeys = (a, b) => allKeys(a, b).filter((k) => a[k] !== b[k]);
 
@@ -132,7 +123,7 @@
          * @param {object} obj 
          * @param  {...string} keys 
          * @returns {object}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const filterKeys = (obj, ...keys) => {
             const result = {};
@@ -148,7 +139,7 @@
          * @param {string} key 
          * @param {any} value
          * @returns {object}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          * @example const obj = fromKeyValuePair('foo', 10); // => obj === {foo: 10} 
          */
         const fromKeyValuePair = (key, value) => {
@@ -160,9 +151,9 @@
         /**
          * Give an array of arrays, `pairs` representing a list of keys and values,
          * create a new object containing those keys and values. 
-         * @param  {...string|any[]} pairs 
+         * @param  {...(string|any)} pairs 
          * @returns {object}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const fromKeyValuePairs = (...pairs) => {
             return immutableMerge(...pairs.map((p) => fromKeyValuePair(...p)));
@@ -171,8 +162,8 @@
         /**
          * Get all keys and values from `objects`, and return them as an array of key/value pairs
          * @param  {...object} objects 
-         * @returns {(string|any)[][]}
-         * @memberof ObjectExtensions#
+         * @returns {any}
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          */
         const toKeyValuePairs = (...objects) => {
             const pairs = [];
@@ -185,7 +176,7 @@
          * contained in the object 
          * @param {object} obj
          * @returns {object[]}
-         * @memberof ObjectExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~ObjectHelper#
          * @example split({a: [0, 1, 2]}); // => [{a: 0}, {a: 1}, {a: 2}] 
          */
         const split = (obj) => {
@@ -204,7 +195,7 @@
         };
 
         /**
-         * @lends ObjectExtensions.prototype
+         * @lends module:se/fivebyfive/ortho/extensions~ObjectHelper.prototype
          */
         return {
             merge, disjunctMerge, immutableMerge,
@@ -217,45 +208,55 @@
 
             split
         };
-    });
-    //#endregion
+    };
 
-    //#region $string
+    
+    const $string =
     /**
-     * @name StringExtensions
+     * @classdesc Helper functions for handling strings. Injectable as `$string` from {@link module:se/fivebyfive/ortho~Orthogonal}
      * @class
-     */
-    $o.register('$string',
-    /**
-     * @constructs StringExtensions
-     * @param {ObjectExtensions} $object
-     */
-     ($object) => {
+     * @constructs module:se/fivebyfive/ortho/extensions~StringHelper
+     * @hideconstructor
+     * @param {module:se/fivebyfive/ortho/extensions~ObjectHelper} $object
+     */ 
+    ($object) => {
         /**
          * An object representing parts of a color in RGBA colorspace
-         * @typedef {{r?: number, g?: number, b?: number, a?:number}} PartialColor
+         * @typedef {Object} PartialColor
+         * @property {?number} r  Red
+         * @property {?number} g  Green
+         * @property {?number} b  Blue
+         * @property {?number} a  Alpha
          */
         /**
          * An object representing a color in RGB colorspace
-         * @typedef {{r: number, g: number, b: number}} RgbColor
+         * @typedef {Object} RgbColor
+         * @property {number} r  Red
+         * @property {number} g  Green
+         * @property {number} b  Blue
          */
 
         /**
          * An object representing a color in RGBA colorspace
-         * @typedef {RgbColor & {a: number}} RgbaColor
+         * @typedef {Object} RgbaColor
+         * @property {number} r  Red
+         * @property {number} g  Green
+         * @property {number} b  Blue
+         * @property {number} a  Alpha
          */
 
         /**
-         * @private @const {RgbaColor}
-         * @memberof StringExtensions#
+         * @private 
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper#
+         * @const {RgbaColor}
          **/
         const defaultColor = { r: 0, g: 0, b: 0, a: 1.0 };
 
         /** 
-         * @private @function
          * @param {PartialColor} col
          * @returns {RgbaColor}
-         * @memberof StringExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper#
+         * @private
          */
         const colorOrDefault = (col) => $object.immutableMerge(defaultColor, col || {});
 
@@ -264,7 +265,7 @@
          * Make sure argument is stringy
          * @param {string} str
          * @returns {string}
-         * @memberof StringExtensions# 
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper# 
          */
         const sanitize = (str) => (str || '').trim();
 
@@ -272,7 +273,7 @@
          * Check if argument is empty, i.e. `undefined`, `null`, `''` &c.
          * @param {string|any} str
          * @returns {boolean}
-         * @memberof StringExtensions# 
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper# 
          */
         const isEmpty = (str) => sanitize(str) === '';
 
@@ -280,7 +281,7 @@
          * Convert a color in hex format (e.g. `#fff`, `#00ffee`) to RGB.
          * @param {string} hex
          * @returns {RgbColor}
-         * @memberof StringExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper#
          */
         const hexToRgb = (hex) => {
             const result = /^#?([a-f\d]{1,2})([a-f\d]{1,2})([a-f\d]{1,2}$)/i.exec(hex),
@@ -296,7 +297,7 @@
          * Parse a color in RGBA string format.
          * @param {string} rgba
          * @returns {RgbaColor}
-         * @memberof StringExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper#
          */
         const rgbaToRgb = (rgba) => {
             const result = /^rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(\s*,\s*((\d+)?(\.\d+)?))?\s*\)$/i.exec(rgba);
@@ -313,7 +314,7 @@
          * Convert a string from `snake-case` to `camelCase`.
          * @param {string} str
          * @returns {string} 
-         * @memberof StringExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper#
          */
         const snakeToCamel = (str) => str.replace(
             /([-_][a-z])/g,
@@ -326,12 +327,12 @@
          * Convert a string from `camelCase` to `snake-case`.
          * @param {string} str
          * @returns {string} 
-         * @memberof StringExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~StringHelper#
          */
         const camelToSnake = (str, sep = '-') => str.split(/(?=[A-Z])/).join(sep).toLowerCase();
 
         /**
-         * @lends StringExtensions.prototype
+         * @lends module:se/fivebyfive/ortho/extensions~StringHelper.prototype
          */
         return {
             hexToRgb, rgbaToRgb,
@@ -340,30 +341,23 @@
 
             sanitize, isEmpty
         };
-    });
-    //#endregion
-    
+    };
 
-    //#region $dom
+    
+    const $dom = 
     /**
-     * @name DomExtensions
+     * @classdesc Helpers for traversing DOM. Injectable as `$dom` from {@link module:se/fivebyfive/ortho~Orthogonal}
      * @class
-     */
-    $o.register('$dom', 
-    /**
-     * @constructs DomExtensions
-     * @param {ArrayExtensions} $array
-     * @param {Document} $document
-     * @param {Window} $window
-     * @param {StringExtensions} $string
+     * @constructs module:se/fivebyfive/ortho/extensions~DomHelper
+     * @hideconstructor
      */
     ($array, $document, $window, $string) => {
         /**
-         * 
+         * Connect `callbacks` to the list of events in `eventNames` on `element`.
          * @param {external:Element} element 
          * @param {string[]} eventNames 
          * @param  {...function} callbacks
-         * @memberof DomExtensions#
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
          */
         const onEvents = (element, eventNames, ...callbacks) => {
             $array.ensureArray(eventNames).forEach((eventName) => {
@@ -375,27 +369,86 @@
             });
         };
 
-        const onEventsWithoutDefault = (element, events, ...callbacks) => {
-            onEvents(element, events, ...callbacks.map((cb) => (ev) => {
+        /**
+         * Connect `callbacks` to the list of events in `eventNames` on `element`.
+         * Also wraps all callbacks in a function that calls `e.preventDefault()' on
+         * all trigger events.
+         * @param {external:Element} element 
+         * @param {string[]} eventNames 
+         * @param  {...function} callbacks
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
+         */
+        const onEventsWithoutDefault = (element, eventNames, ...callbacks) => {
+            onEvents(element, eventNames, ...callbacks.map((cb) => (ev) => {
                 ev.preventDefault();
                 cb(ev);
             }));
         };
 
+        /**
+         * Dispatch `action` on `store` when the given `eventNames` occur.
+         * `payloadSelector` is a callback-function, which transforms an element into a payload.
+         * @param {external:Node} element 
+         * @param {(string|string[])} eventNames 
+         * @param {modules:se/fivebyfive/ortho/OrthoStore} store 
+         * @param {string} action 
+         * @param {function} payloadSelector 
+         */
+        const dispatchOnEvent = (element, eventNames, store, action, payloadSelector) => {
+            onEventsWithoutDefault(element, eventNames, (ev) => store.dispatch(action, payloadSelector(ev)));
+        };
+
+        /**
+         * Get x and y coordinates of `element`
+         * @param {external:Element} element 
+         * @returns {{x: number, y: number}}
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
+         */
         const getPosition = (element) => {
             const { top, left } = element.getBoundingClientRect();
             const { scrollY, scrollX } = $window;
 
             return { x: top + scrollX, y: left + scrollY };
         };
+
+        /**
+         * Get dimensions of `element`
+         * @param {external:Element} element
+         * @returns {{height: number, height: number}}
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper# 
+         */
         const getSize = (element) => {
             const [{ height, width }] = element.getClientRects();
             return { height, width };
         };
 
+        /**
+         * Get sanitized value from `element` (assumed to be an input element),
+         * or empty string if there is no value.
+         * @param {external:Element} element 
+         * @returns {string}
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
+         */
         const getValue = (element) => $string.sanitize(element.value);
+
+        /**
+         * Set sanitized `value` on `element` (assumed to be an input element),
+         * or empty string if there is no value.
+         * @param {external:Element} element
+         * @param {string} value 
+         * @returns {string}
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
+         */
         const setValue = (element, value) => element.value = $string.sanitize(value);
 
+        /**
+         * Create an HTML element.
+         * @param {string} tagName 
+         * @param {Object} attributes 
+         * @param  {...any} children 
+         * @returns {external:HTMLElement}
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
+         */
         const createTag = (tagName, attributes, ...children) => {
             const tag = $document.createElement(tagName);
             Object.keys(attributes).forEach((k) => tag.setAttribute(k, attributes[k]));
@@ -404,6 +457,13 @@
             return tag;
         };
 
+        /**
+         * If `selectOrElement` is an `Element`, return it, otherwise try to find it
+         * treating `selectOrElement` as a dom query.
+         * @param {string|exernal:Element} selectorOrElement 
+         * @returns {external:Element}
+         * @memberof! module:se/fivebyfive/ortho/extensions~DomHelper#
+         */
         const ensureElement = (selectorOrElement) => {
             if (typeof selectorOrElement === 'string') {
                 return $document.querySelector(selectorOrElement);
@@ -412,7 +472,7 @@
         };
 
         /**
-         * @lends DomExtensions.prototype
+         * @lends module:se/fivebyfive/ortho/extensions~DomHelper.prototype
          */
         return {
             createTag,
@@ -420,27 +480,57 @@
             ensureElement,
 
             onEvents, onEventsWithoutDefault,
+            dispatchOnEvent,
 
             getPosition, getSize,
 
             getValue, setValue,
         };
-    }, false);
-    //#endregion
+    };
 
-    //#region $query
-    $o.register('$query', ($object, $string, $document) => {
+
+    const $query = 
+    /**
+     * @classdesc Helper for handling dom querys. Injectable from {@link module:se/fivebyfive/ortho~Orthogonal} as `$query`.
+     * @class
+     * @constructs module:se/fivebyfive/ortho/extensions~QueryHelper
+     * @hideconstructor
+     */
+    ($object, $string, $document) => {
+        /**
+         * Wrapper around `querySelectorAll` allowing you to pass along a callback to call on all elements found
+         * @param {external:HTMLElement} root 
+         * @param {string} selector 
+         * @param {function} callback 
+         * @returns {any[]} The mapped list
+         * @memberof! module:se/fivebyfive/ortho/extensions~QueryHelper#
+         */
         const map = (root, selector, callback) => {
             const result = [];
             (root || $document).querySelectorAll(selector).forEach((element, index, all) => result.push(callback(element, index, all)));
             return result;
         };
 
+        /**
+         * Query by attribute name.
+         * @param {external:HTMLElement} root 
+         * @param {string} attribute 
+         * @returns {Object} all matching elements, plus metadata.
+         * @memberof module:se/fivebyfive/ortho/extensions~QueryHelper#
+         */
         const queryByAttribute = (root, attribute) => map(
             root, `[${attribute}]`,
             (element, index, all) => ({ element, attributeName, index, all })
         );
 
+        /**
+         * Query by data-attribute. Optionally adds other attributes to result
+         * @param {external:HTMLElement} root 
+         * @param {string} attribute 
+         * @param  {...any} otherAttributes 
+         * @returns {any[]} List of elements, along with index, and attribute values.
+         * @memberof module:se/fivebyfive/ortho/extensions~QueryHelper#
+         */
         const dataSelectorAll = (root, attribute, ...otherAttributes) => {
             const attributeName = $string.camelToSnake(attribute).replace('data-'),
                 attributeKey = $string.snakeToCamel(attributeName),
@@ -453,17 +543,42 @@
                 );
             });
         };
+
+        /**
+         * @lends module:se/fivebyfive/ortho/extensions~QueryHelper.prototype
+         */
         return {
             map,
             dataSelectorAll,
             queryByAttribute
         };
-    });
-    //#endregion
+    };
 
-    //#region $css
-    $o.register('$css', ($string, $document) => {
+    
+    const $css =
+    /**
+     * @classdesc Helper for getting css-vars and creating classnames. Injected as `$css` from {@link module:se/fivebyfive/ortho~Orthogonal}.
+     * @class
+     * @constructs module:se/fivebyfive/ortho/extensions~CssHelper
+     * @hideconstructor
+     */ 
+    ($string, $document) => {
+        /**
+         * Get CSS variable with name `key`, if it exists under `root`
+         * @param {string} key 
+         * @param {external:HTMLELement} root 
+         * @returns {string}
+         * @memberof! module:se/fivebyfive/ortho/extensions~CssHelper#
+         */
         const getVar = (key, root = null) => getComputedStyle(root || $document.documentElement).getPropertyValue(key);
+
+        /**
+         * Get CSS variable with name `key`, if it exists under `root`, converted to RGB.
+         * @param {string} key 
+         * @param {external:HTMLELement} root 
+         * @returns {ColorRgb}
+         * @memberof! module:se/fivebyfive/ortho/extensions~CssHelper#
+         */
         const getVarAsColor = (key, root = null) => {
             const value = $string.sanitize(getVar(key, root));
 
@@ -471,33 +586,40 @@
                 : value.match(/^rgb/i) ? $string.rgbaToRgb(value)
                     : $string.hexToRgb(value);
         };
+
+        /**
+         * Create a list of classnames, consisting of `element` + `element--variant` for every `variants`
+         * @param {string} element 
+         * @param  {...string} variants 
+         * @returns {string[]}
+         * @memberof! module:se/fivebyfive/ortho/extensions~CssHelper#
+         */
         const classNames = (element, ...variants) => [element, ...variants.map((v) => `${element}--${v}`)];
 
         return {
             getVar, getVarAsColor,
             classNames
         };
-    });
-    //#endregion
+    };
 
-    //#region $linear
+
+    /** @module se/fivebyfive/ortho/extensions */
+    const $linear = 
     /**
-     * @name LinearUtils
-     * @classdesc Linear interpolation functions
+     * @classdesc Linear interpolation functions. Injected as `$linear` from {@link module:se/fivebyfive/ortho~Orthogonal}.
      * @class
+     * @constructs module:se/fivebyfive/ortho/extensions~LinearUtils
+     * @hideconstructor
      */
-    $o.register('$linear', 
-    /**
-     * @constructs
-     */
-    () => {
+    () => 
+    {
         /**
          * @param x {Number}
          * @param y {Number}
          * @param a {Number} Ratio -- between `0.0` and `1.0` (inclusive)
          * @return {Number} A value between `x` and `y` at the decimal point `a`. 
          * @example $linear->lerp(0, 10, .5); // => 5
-         * @memberof LinearUtils#
+         * @memberof! module:se/fivebyfive/ortho/extensions~LinearUtils#
          */
         const lerp = (x, y, a) => x * (1 - a) + y * a;
 
@@ -507,7 +629,7 @@
          * @param max {Number} (default: `1`)
          * @return {Number} `a` or `min` if `a < min`, or `max` if `a > max`. 
          * @example $linear->clamp(10, 2, 5); // => 5
-         * @memberof LinearUtils#
+         * @memberof! module:se/fivebyfive/ortho/extensions~LinearUtils#
          */
         const clamp = (a, min = 0, max = 1) => Math.min(max, Math.max(min, a))
         
@@ -517,7 +639,7 @@
          * @param {Number} a
          * @return {Number} Where `a` falls between `x` and `y` as a ratio
          * between `0.0` and `1.0`. @see lerp
-         * @memberof LinearUtils#
+         * @memberof! module:se/fivebyfive/ortho/extensions~LinearUtils#
          */
         const invlerp = (x, y, a) => clamp((a - x) / (y - x));
         
@@ -530,7 +652,7 @@
          * @param {Number} a 
          * @return {Number} The value `a` converted to the value at the same place in `[x2 ... y2]`
          * as `a` has in `[x1 ... y1]`
-         * @memberof LinearUtils#
+         * @memberof! module:se/fivebyfive/ortho/extensions~LinearUtils#
          */
         const range = (x1, y1, x2, y2, a) => lerp(x2, y2, invlerp(x1, y1, a));
 
@@ -543,7 +665,7 @@
          * @return {Number} If `maps` is an array of maps containing at least the keys
          * from the string `from` and `to`, representing corresponding values in two ranges,
          * return `val` from range `from` fitted to the range `b`.
-         * @memberof LinearUtils#
+         * @memberof! module:se/fivebyfive/ortho/extensions~LinearUtils#
          */
         const rangeMap = (maps, from, to, val) => {
             const min = maps[0][from];
@@ -568,7 +690,7 @@
          * @param {number} num 
          * @param {number} max 
          * @returns {number}
-         * @memberof LinearUtils#
+         * @memberof! module:se/fivebyfive/ortho/extensions~LinearUtils#
          */
         const modLimit = (num, max) => {
             if (num > max) {
@@ -582,11 +704,67 @@
         }
 
         /**
-         * @lends LinearUtils.prototype
+         * @lends module:se/fivebyfive/ortho/extensions~LinearUtils.prototype
          */
         return {
             lerp, clamp, invlerp, range, rangeMap, modLimit
         };
-    });
-    //#endregion
+    };
+
+
+    /**
+     * All injectable services from {@link module:se/fivebyfive/ortho/extensions}
+     * @module se/fivebyfive/ortho/extensions/services
+     */
+    const services = {
+        /** 
+         * @name $array
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~ArrayHelper}
+         **/
+        $array,
+
+        /** 
+         * @name $object
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~ObjectHelper}
+         **/
+        $object,
+
+        /** 
+         * @name $string
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~StringHelper}
+         **/   
+        $string,
+
+        /**
+         * @name $dom
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~DomHelper}
+         */
+        $dom,
+
+        /**
+         * @name $query
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~QueryHelper}
+         */
+        $query,
+
+        /**
+         * @name $css
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~CssHelper}
+         */
+        $css,
+
+        /**
+         * @name $linear
+         * @static
+         * @type {module:se/fivebyfive/ortho/extensions~LinearUtils}
+         */
+        $linear
+    };
+    $o.registerAll(services);
 })(orthogonal);

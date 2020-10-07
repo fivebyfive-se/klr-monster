@@ -8,11 +8,10 @@
  * @typedef {{h: number, s: number, v: number}} ColorHSV
  */
 
-     //#region $colorHarmony
-$o.register('$colorHarmony', 
+const $colorHarmony = 
 /**
  * @function
- * @param {module:se/fivebyfive/ortho/extensions.ArrayExtension} $array
+ * @param {module:se/fivebyfive/ortho/extensions~ArrayHelper} $array
  * @param {ColorUtil} $colorUtil
  */
 ($array, $colorUtil) => {
@@ -21,7 +20,10 @@ $o.register('$colorHarmony',
      * @class 
      */
     class ColorHarmony {
-        constructor(harmony = 'custom') {
+        /**
+         * @hideconstructor
+         */
+        constructor() {
             const harmonies = {
                 complementary: [0,180, [0, .7, .7], [180, .7, .7], [0, 2, 2]],
                 splitComplementary: [0,150,320, [150, .5, .5], [320, .5, .5]],
@@ -42,11 +44,7 @@ $o.register('$colorHarmony',
                 custom: [0, 0, 0, 0, 0]
             };
 
-            /** @private */
-            this.harmony = harmony;
-
             /**
-             * 
              * @param {number} old 
              * @param {number} change 
              * @param {number} max 
@@ -68,11 +66,13 @@ $o.register('$colorHarmony',
             }
 
             /**
-             * Calculate colors for currently chose harmony
-             * @param {ColorHSL} color 
+             * Calculate colors for `harmony`, starting from `color`
+             * @param {string} harmony
+             * @param {ColorHSL} color
+             * @returns {ColorHSL[]} - Resulting harmonized list of colors 
              */
-            this.harmonize = (color) => {
-                return harmonies[this.harmony].map((mod, i) => {
+            this.harmonize = (harmony, color) => {
+                return harmonies[harmony].map((mod, i) => {
                     if (i === 0) {
                         return color;
                     }
@@ -86,26 +86,65 @@ $o.register('$colorHarmony',
                 });
             };
 
-            this.changeHarmony = (newHarmony) => {
-                if (harmonies.hasOwnProperty(newHarmony)) {
-                    this.harmony = newHarmony;
-                }
-            };
+            /**
+             * Get a list of all available harmonies' names
+             * @returns {string[]}
+             */
+            this.harmonyNames = () => Object.keys(harmonies);
 
-            this.harmonies = () => Object.keys(harmonies);
+            /**
+             * Get a list of all available harmonies
+             * @returns {{name: string, transformations: number[]}}
+             */
+            this.harmonies = () => this.harmonyNames().map((name) => ({ name, transformations: harmonies[name] }));
         }
     }
 
-    return {
-        create: (harmony = 'complementary') => new ColorHarmony(harmony)
-    };
-});
-//#endregion
+    return new ColorHarmony();
+};
 
-//#region $colorUtil
-$o.register('$colorUtil', ($linear) => {
+/**
+ * 
+ * @typedef {Object} ColorRGB
+ * @property {number} r
+ * @property {number} g
+ * @property {number} b
+ */
+/**
+ * 
+ * @typedef {Object} ColorHSV
+ * @property {number} h
+ * @property {number} s
+ * @property {number} v
+ */
+/**
+ * 
+ * @typedef {Object} ColorHSL
+ * @property {number} h
+ * @property {number} s
+ * @property {number} l
+ */
+
+const $colorUtil =
+/**
+ * @constructs ColorUtil
+ * @param {module:se/fivebyfive/ortho/extensions~LinearUtil} $linear
+ **/ 
+($linear) => {
+    /**
+     * @classdesc Helpers for converting colors among color-spaces
+     * @class
+     */
     class ColorUtil {
+        /**
+         * @hideconstructor
+         */
         constructor() {
+            /**
+             * Convert Hex to RGB.
+             * @param {string} hex
+             * @returns {ColorRGB} 
+             */
             this.hex_to_rgb = (hex) => {
                 let r = 0, g = 0, b = 0;
               
@@ -121,8 +160,17 @@ $o.register('$colorUtil', ($linear) => {
                 return { r: parseInt(r, 16), g: parseInt(r, 16), b: parseInt(b, 16) };
             };
 
+            /**
+             * Convert hex string to HSL
+             * @param {string} hex 
+             * @returns {ColorHSL}
+             */
             this.hex_to_hsl = (hex) => this.rgb_to_hsl(this.hex_to_rgb(hex));
 
+            /**
+             * @param {ColorHSL} param0
+             * @returns {ColorRGB} 
+             */
             this.hsl_to_rgb = ({h, s, l}) => {
                   // Must be fractions of 1
                 const sNorm = s / 100;
@@ -154,8 +202,16 @@ $o.register('$colorUtil', ($linear) => {
                 return {r, g, b};
             };
 
+            /**
+             * @param {ColorHSL} param0
+             * @returns {string} 
+             */
             this.hsl_to_hex = ({h, s, l}) => this.rgb_to_hex(this.hsl_to_rgb({h, s, l}));
 
+            /**
+             * @param {ColorHSL} param0
+             * @returns {ColorHSV} 
+             */
             this.hsl_to_hsv = ({h, s, l}) => {
                 let newS = s / 100,
                     normL = l / 100;
@@ -168,6 +224,10 @@ $o.register('$colorUtil', ($linear) => {
                 };
             };
 
+            /**
+             * @param {ColorHSV} param0
+             * @returns {ColorHSL} 
+             */
             this.hsv_to_hsl = ({h, s, v}) => {
                 const normS = s / 100,
                     normV = v / 100;
@@ -187,6 +247,10 @@ $o.register('$colorUtil', ($linear) => {
                 return {h: +h, s: +(newS * 100).toFixed(1), l: +(l * 100).toFixed(1)};
             };
 
+            /**
+             * @param {ColorRGB} param0
+             * @returns {string} 
+             */
             this.rgb_to_hex = ({r, g, b}) => {
                 let hexR = (r < 0x10 ? '0' : '') + r.toString(16),
                     hexG = (g < 0x10 ? '0' : '') + g.toString(16),
@@ -194,6 +258,10 @@ $o.register('$colorUtil', ($linear) => {
                 return `#${hexR}${hexG}${hexB}`;
             };
 
+            /**
+             * @param {ColorRGB} param0
+             * @returns {ColorHSL} 
+             */
             this.rgb_to_hsl = ({r, g, b}) => {
                 const rNorm = (r / 255).toFixed(1), 
                     gNorm = (g / 255).toFixed(1),
@@ -237,7 +305,19 @@ $o.register('$colorUtil', ($linear) => {
 
             const doMap = (map, from, to, val) => +($linear.rangeMap(map, from, to, val) % 361).toFixed(1);
 
+
+            /**
+             * Translate from RYB color space to HSL
+             * @param {number} hue 
+             * @returns {number} 
+             */
             this.rybhue_to_hslhue = (hue) => doMap(ryb_to_hsl_map, 'ryb', 'hsl', hue);
+
+            /**
+             * Translate from HSL color space to RYN
+             * @param {number} hue 
+             * @returns {number} 
+             */
             this.hslhue_to_rybhue = (hue) => doMap(ryb_to_hsl_map, 'hsl', 'ryb', hue);
 
             const col_to_string = (col) => {
@@ -247,6 +327,12 @@ $o.register('$colorUtil', ($linear) => {
                     .join(', ');
             };
 
+            /**
+             * Convert from any color space to any string format
+             * @param {any} source 
+             * @param {string} type `"hex"`, `"rgb"`, `"hsl"`, or `"hsv"`
+             * @returns {string}
+             */
             this.any_to_string = (source, type='hex') => {
                 const hsl = this.any_to_hsl(source);
                 let res = {};
@@ -268,6 +354,11 @@ $o.register('$colorUtil', ($linear) => {
                 return `${type}(${col_to_string(res)})`;
             };
 
+            /**
+             * Convert from any color space (include string representations), to HSL.
+             * @param {any} source 
+             * @returns {ColorHSL}
+             */
             this.any_to_hsl = (source) => {
                 if (typeof source === 'string') {
                     if (source.startsWith('#')) {
@@ -307,12 +398,19 @@ $o.register('$colorUtil', ($linear) => {
     };
 
     return new ColorUtil();
-});
-//#endregion
+};
 
-//#region $colorWheel
-$o.register('$colorWheel', ($colorUtil, $linear, $window) => {
+const $colorWheel =
+($colorUtil, $linear, $window) => {
+    /**
+     * @classdesc Class for creating color-wheels that can be drawn on an HTML canvas.
+     * @class
+     */
     class ColorWheel {
+        /**
+         * Create new instance of `ColorWheel`, do be drawn in `canvas`
+         * @param {external:HTMLCanvas} canvas 
+         */
         constructor(canvas) {
             canvas.height = canvas.width = $window.innerHeight / 2;
             const context = canvas.getContext('2d');
@@ -339,6 +437,11 @@ $o.register('$colorWheel', ($colorUtil, $linear, $window) => {
                 { p:  0, l: 100},
             ];
 
+            /**
+             * Calculate the color at the given mouse position
+             * @param {external:MouseEvent} mouseEvent
+             * @returns {ColorHSL}
+             */
             this.color_at = (mouseEvent) => {
                 const x = mouseEvent.offsetX,
                     y = mouseEvent.offsetY;
@@ -351,6 +454,11 @@ $o.register('$colorWheel', ($colorUtil, $linear, $window) => {
                 return { h, s, l };
             };
 
+            /**
+             * Calculate the position of the given color in the color wheel.
+             * @param {ColorHSL} param0 
+             * @returns {{x: number, y: number}}
+             */
             this.color_to_pos = ({h, s, l}) => {
                 const a = $colorUtil.hslhue_to_rybhue(h) * Math.PI / 180;
                 const dS = $linear.rangeMap(map_psl, 's', 'p', s) * radius;
@@ -363,6 +471,10 @@ $o.register('$colorWheel', ($colorUtil, $linear, $window) => {
             };
 
 
+            /**
+             * Draw the color wheel.
+             * @function
+             */
             this.draw = () => {
                 for(let angle = 0; angle <= 360; angle++) {
                     const startAngle = (angle-2)*Math.PI/180;
@@ -391,6 +503,33 @@ $o.register('$colorWheel', ($colorUtil, $linear, $window) => {
     return {
         create: (canvas) => new ColorWheel(canvas)
     };
-});
-//#endregion
+};
+
+/**
+ * All injectable services from {@link module:se/fivebyfive/ortho/color}
+ * @module se/fivebyfive/ortho/color/services
+ */
+const services = {
+    /** 
+     * @name $colorUtil
+     * @static
+     * @type {module:se/fivebyfive/ortho/color~ColorUtil}
+     **/
+    $colorUtil,
+
+    /** 
+     * @name $colorHarmony
+     * @static
+     * @type {module:se/fivebyfive/ortho/color~ColorHarmony}
+     **/
+    $colorHarmony,
+
+    /** 
+     * @name $colorWheel
+     * @static
+     * @type {module:se/fivebyfive/ortho/color~ColorWheel}
+     **/
+    $colorWheel
+};
+$o.registerAll(services);
 })(orthogonal);
