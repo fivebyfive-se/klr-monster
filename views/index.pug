@@ -24,6 +24,6 @@ block content
                         input(class=className('__', 'text', '-name', `-${index}`), id=`color-name-${index}`, data-color=index)
                         div(class=className('__', 'preview', `-${index}`), id=`color-preview-${index}`, data-color=index)
                         input(class=className('__', 'text', '-color', `-${index}`), id=`color-hex-${index}`, data-color=index)
-
-    +script('/js/ortho/libs/orthogonal.color.js', 'beta')
+        
+    +script('https://cdn.jsdelivr.net/gh/fivebyfive-se/orthogonal@latest/dist/orthogonal.color.min.js', 'beta')
     +script('/js/main.js')
